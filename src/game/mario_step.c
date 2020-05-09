@@ -5,7 +5,7 @@
 #include "engine/surface_collision.h"
 #include "mario.h"
 #include "audio/external.h"
-#include "game_init.h"
+#include "display.h"
 #include "interaction.h"
 #include "mario_step.h"
 
@@ -21,9 +21,9 @@ struct Surface gWaterSurfacePseudoFloor = {
  * to be used for the beta trampoline. Its return value
  * is used by set_mario_y_vel_based_on_fspeed as a constant
  * addition to Mario's Y velocity. Given the closeness of
- * this function to stub_mario_step_2, it is probable that this
+ * this function to nop_80254E50, it is probable that this
  * was intended to check whether a trampoline had made itself
- * known through stub_mario_step_2 and whether Mario was on it,
+ * known through nop_80254E50 and whether Mario was on it,
  * and if so return a higher value than 0.
  */
 f32 get_additive_y_vel_for_jumps(void) {
@@ -33,13 +33,13 @@ f32 get_additive_y_vel_for_jumps(void) {
 /**
  * Does nothing, but takes in a MarioState. This is only ever
  * called by update_mario_inputs, which is called as part of Mario's
- * update routine. Due to its proximity to stub_mario_step_2, an
+ * update routine. Due to its proximity to nop_80254E50, an
  * incomplete trampoline function, and get_additive_y_vel_for_jumps,
  * a potentially trampoline-related function, it is plausible that
  * this could be used for checking if Mario was on the trampoline.
  * It could, for example, make him bounce.
  */
-void stub_mario_step_1(UNUSED struct MarioState *x) {
+void nop_80254E3C(UNUSED struct MarioState *x) {
 }
 
 /**
@@ -49,7 +49,7 @@ void stub_mario_step_1(UNUSED struct MarioState *x) {
  * by the trampoline to make itself known to get_additive_y_vel_for_jumps,
  * or to set a variable with its intended additive Y vel.
  */
-void stub_mario_step_2(void) {
+void nop_80254E50(void) {
 }
 
 void transfer_bully_speed(struct BullyCollisionData *obj1, struct BullyCollisionData *obj2) {
@@ -71,8 +71,8 @@ void transfer_bully_speed(struct BullyCollisionData *obj1, struct BullyCollision
     //! Bully battery
 }
 
-BAD_RETURN(s32) init_bully_collision_data(struct BullyCollisionData *data, f32 posX, f32 posZ,
-                               f32 forwardVel, s16 yaw, f32 conversionRatio, f32 radius) {
+void init_bully_collision_data(struct BullyCollisionData *data, f32 posX, f32 posZ, f32 forwardVel,
+                               s16 yaw, f32 conversionRatio, f32 radius) {
     if (forwardVel < 0.0f) {
         forwardVel *= -1.0f;
         yaw += 0x8000;
@@ -564,7 +564,7 @@ void apply_gravity(struct MarioState *m) {
             m->vel[1] = -16.0f;
         }
     } else if ((m->flags & MARIO_WING_CAP) && m->vel[1] < 0.0f && (m->input & INPUT_A_DOWN)) {
-        m->marioBodyState->wingFlutter = TRUE;
+        m->marioBodyState->unk07 = 1;
 
         m->vel[1] -= 2.0f;
         if (m->vel[1] < -37.5f) {

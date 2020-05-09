@@ -1,120 +1,97 @@
 #ifndef PAINTINGS_H
 #define PAINTINGS_H
 
-#include "types.h"
-
-/**
- * @file paintings.h
- */
-
-/// Use to properly set a GraphNodeGenerated's parameter to point to the right painting
-#define PAINTING_ID(id, grp) id | (grp << 8)
-
-/// The default painting side length
-#define PAINTING_SIZE 614.0
+#define DEFAULT_HEIGHT 614.0
 
 #define PAINTING_ID_DDD 7
 
+#define DIRE_DIRE_DOCKS 9
 #define BOARD_BOWSERS_SUB 1
 
 #define BOWSERS_SUB_BEATEN 0x2
 #define DDD_BACK 0x1
 
-#define PAINTING_IDLE 0
-#define PAINTING_RIPPLE 1
-#define PAINTING_ENTERED 2
+#define STAND_LEFT 0x20
+#define STAND_MIDDLE 0x10
+#define STAND_RIGHT 0x8
+#define ENTER_LEFT 0x4
+#define ENTER_MIDDLE 0x2
+#define ENTER_RIGHT 0x1
+
+#define RIPPLE_SHAPE_WAVE 0
+#define RIPPLE_SHAPE_CONCENTRIC 1
+
+#define RIPPLE_STATE_NONE 0
+#define RIPPLE_STATE_IDLE 1
+#define RIPPLE_STATE_ENTRY 2
 
 #define RIPPLE_TRIGGER_PROXIMITY 10
 #define RIPPLE_TRIGGER_CONTINUOUS 20
 
-/// Painting that uses 1 or more images as a texture
-#define PAINTING_IMAGE 0
-/// Painting that has one texture used for an environment map effect
-#define PAINTING_ENV_MAP 1
+#define ROTATION_VERTICAL 0
+
+#define NEAR_MARIO_LATERALLY 30
+#define MARIO_X 40
+#define MIDDLE_X 50
+#define MARIO_Y 60
+#define MARIO_Z 70
+#define MIDDLE_Y 80
+
+#define DONT_RESET_TIMER -56
+#define RESET_TIMER 100
 
 struct Painting
 {
     s16 id;
-    /// How many images should be drawn when the painting is rippling.
-    s8 imageCount;
-    /// Either PAINTING_IMAGE or PAINTING_ENV_MAP
-    s8 textureType;
+    s8 faceCount;
+    s8 rippleShape;
 
-    /// The floor mario was on last frame
     s8 lastFloor;
-    /// The floor mario is currently on
     s8 currFloor;
-    /// The floor mario just entered
     s8 floorEntered;
 
-    /// The painting's state, see top of paintings.c
-    s8 state;
+    s8 rippleStatus;
 
-    /// The painting's rotation
-    f32 pitch;
-    f32 yaw;
+    float vXRotation;
+    float vYRotation;
 
-    /// The painting's position
-    f32 posX;
-    f32 posY;
-    f32 posZ;
+    float vXPos;
+    float vYPos;
+    float vZPos;
 
-    /// Controls how high the peaks of the ripple are.
-    f32 currRippleMag;
-    f32 passiveRippleMag;
-    f32 entryRippleMag;
+    float currRippleMag;
+    float passiveRippleMag;
+    float entryRippleMag;
 
-    /// Multiplier that controls how fast the ripple regresses to the IDLE state.
-    f32 rippleDecay;
-    f32 passiveRippleDecay;
-    f32 entryRippleDecay;
+    float rippleMagMultiplier;
+    float passiveRippleMagMultiplier;
+    float entryRippleMagMultiplier;
 
-    /// Controls the ripple's frequency
-    f32 currRippleRate;
-    f32 passiveRippleRate;
-    f32 entryRippleRate;
+    float currRippleRate;
+    float passiveRippleRate;
+    float entryRippleRate;
 
-    /// The rate at which the magnitude of the ripple decreases as you move farther from the central
-    /// point of the ripple
-    f32 dispersionFactor;
-    f32 passiveDispersionFactor;
-    f32 entryDispersionFactor;
+    float dispersionFactor; // the rate at which the magnitude of the ripple decreases as you move farther from the central point of the ripple
+    float passiveDispersionFactor;
+    float entryDispersionFactor;
 
-    /// How far the ripple has spread
-    f32 rippleTimer;
+    float rippleTimer;
 
-    /// The x and y origin of the ripple
-    f32 rippleX;
-    f32 rippleY;
+    float horizontalRippleSpot;
+    float verticalRippleSpot;
 
-    /// Display list used when the painting is normal.
-    const Gfx *normalDisplayList;
-    /// Data used to map the texture to the mesh
-    const s16 *const *textureMaps;
-
-    // Texture data
+    const Gfx *displayList58;
+    const s16 *const *meshData;
     const u8 *const *textureArray;
     s16 textureWidth;
     s16 textureHeight;
-
-    /// Display list used when the painting is rippling.
-    const Gfx *rippleDisplayList;
-    /// Controls when a passive ripple starts. RIPPLE_TRIGGER_CONTINUOUS or RIPPLE_TRIGGER_PROXIMITY.
+    const Gfx *displayList68;
     s8 rippleTrigger;
-
-    /// The painting's transparency. Determines what layer the painting is in.
-    u8 alpha;
-
-    /// True if mario was under the painting's y coordinate last frame
-    s8 marioWasUnder;
-    /// True if mario is currently under the painting's y coordinate
-    s8 marioIsUnder;
-    /// True if mario just went under the painting's y coordinate on this frame
-    s8 marioWentUnder;
-
-    /// Uniformly scales the painting to a multiple of PAINTING_SIZE.
-    /// By default a painting is 614.0 x 614.0
-    f32 size;
+    u8 brightness;
+    s8 lastMarioUnderPainting;
+    s8 currMarioUnderPainting;
+    s8 marioNewlyUnderPainting;
+    float vSize;
 };
 
 extern struct Painting cotmc_painting;
@@ -137,26 +114,23 @@ extern struct Painting thi_huge_painting;
 extern struct Painting ttm_slide_painting;
 
 extern u16 gAreaUpdateCounter;
-extern f32 gPaintingMarioYEntry;
+extern float gPaintingMarioYEntry;
 
 // defined in file
 extern s16 gPaintingMarioFloorType;
-extern f32 gPaintingMarioXPos, gPaintingMarioYPos, gPaintingMarioZPos;
+extern float gPaintingMarioXPos, gPaintingMarioYPos, gPaintingMarioZPos;
 
-/**
- * Contains the position and normal of a vertex in the painting's generated mesh.
- */
-struct PaintingMeshVertex {
-    /*0x00*/ s16 pos[3];
-    /*0x06*/ s8 norm[3];
+struct Thing { //TODO: Give me a better name
+    /*0x00*/ s16 unk0[3];
+    /*0x06*/ s8 unk6[3];
 };
 
-extern struct PaintingMeshVertex *gPaintingMesh;
-extern Vec3f *gPaintingTriNorms;
-extern struct Painting *gRipplingPainting;
-extern s8 gDddPaintingStatus;
+extern struct Thing *D_8035FFA0;
+extern Vec3f *D_8035FFA4;
+extern struct Painting *ripplingPainting;
+extern s8 dddStatus;
 
-extern Gfx *geo_painting_draw(s32 run, struct GraphNode *node, void *context);
-extern Gfx *geo_painting_update(s32 run, struct GraphNode *node, f32 c[4][4]);
+extern Gfx *Geo18_802D5B98(s32 run, struct GraphNode *node, void *context);
+extern Gfx *Geo18_802D5D0C(s32 run, struct GraphNode *node, f32 c[4][4]);
 
 #endif /* PAINTINGS_H */

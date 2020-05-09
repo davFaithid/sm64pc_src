@@ -6,12 +6,12 @@ void bhv_end_birds_2_loop(void) {
     f32 sp34;
     s16 sp32, sp30;
 
-    sp38 = random_float();
-    gCurrentObject->oForwardVel = (random_float() * 10.f) + 25.f;
+    sp38 = RandomFloat();
+    gCurrentObject->oForwardVel = (RandomFloat() * 10.f) + 25.f;
 
     switch (gCurrentObject->oAction) {
         case 0:
-            cur_obj_scale(0.7f);
+            obj_scale(0.7f);
             gCurrentObject->oAction += 1;
             break;
         case 1:
@@ -23,9 +23,9 @@ void bhv_end_birds_2_loop(void) {
             obj_rotate_towards_point(gCurrentObject, sp3C, 0, 0, 8, 8);
 
             if ((gCurrentObject->oEndBirdUnk104 == 0.f) && (gCurrentObject->oTimer == 0))
-                cur_obj_play_sound_2(SOUND_GENERAL_BIRDS_FLY_AWAY);
+                PlaySound2(SOUND_GENERAL_BIRDS_FLY_AWAY);
             break;
     }
 
-    cur_obj_set_pos_via_transform();
+    func_802A2A38();
 }

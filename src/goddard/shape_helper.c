@@ -16,10 +16,7 @@
 
 #include "dynlists/dynlists.h"
 #include "dynlists/dynlist_macros.h"
-
-#ifndef VERSION_EU
 #include <prevent_bss_reordering.h>
-#endif
 
 // types
 struct UnkData {
@@ -186,7 +183,7 @@ void calc_face_normal(struct ObjFace *face) {
         sp2C.z =
             (((sp44.x - sp50.x) * (sp38.y - sp44.y)) - ((sp44.y - sp50.y) * (sp38.x - sp44.x))) * sp18;
         // 245C84
-        gd_normalize_vec3f(&sp2C);
+        into_unit_vec3f(&sp2C);
         face->normal.x = sp2C.x;
         face->normal.y = sp2C.y;
         face->normal.z = sp2C.z;
@@ -489,16 +486,16 @@ void Unknown80198068(UNUSED f32 a0) {
 
 /* @ 24684C for 0x6C */
 void func_8019807C(struct ObjVertex *vtx) {
-    gd_rot_2d_vec(D_801BAC60.x, &vtx->pos.y, &vtx->pos.z);
-    gd_rot_2d_vec(D_801BAC60.y, &vtx->pos.x, &vtx->pos.z);
-    gd_rot_2d_vec(D_801BAC60.z, &vtx->pos.x, &vtx->pos.y);
+    func_80194880(D_801BAC60.x, &vtx->pos.y, &vtx->pos.z);
+    func_80194880(D_801BAC60.y, &vtx->pos.x, &vtx->pos.z);
+    func_80194880(D_801BAC60.z, &vtx->pos.x, &vtx->pos.y);
 }
 
 /* @ 2468B8 for 0x6C */
 void func_801980E8(f32 *a0) {
-    gd_rot_2d_vec(D_801BAC60.x, &a0[1], &a0[2]);
-    gd_rot_2d_vec(D_801BAC60.y, &a0[0], &a0[2]);
-    gd_rot_2d_vec(D_801BAC60.z, &a0[0], &a0[1]);
+    func_80194880(D_801BAC60.x, &a0[1], &a0[2]);
+    func_80194880(D_801BAC60.y, &a0[0], &a0[2]);
+    func_80194880(D_801BAC60.z, &a0[0], &a0[1]);
 }
 
 /* @ 246924 for 0x30 */

@@ -13,7 +13,7 @@
 #define INTERACT_KOOPA          /* 0x00000080 */ (1 <<  7)
 #define INTERACT_UNKNOWN_08     /* 0x00000100 */ (1 <<  8)
 #define INTERACT_BREAKABLE      /* 0x00000200 */ (1 <<  9)
-#define INTERACT_STRONG_WIND    /* 0x00000400 */ (1 << 10)
+#define INTERACT_WIND           /* 0x00000400 */ (1 << 10)
 #define INTERACT_WARP_DOOR      /* 0x00000800 */ (1 << 11)
 #define INTERACT_STAR_OR_KEY    /* 0x00001000 */ (1 << 12)
 #define INTERACT_WARP           /* 0x00002000 */ (1 << 13)
@@ -23,7 +23,7 @@
 #define INTERACT_BULLY          /* 0x00020000 */ (1 << 17)
 #define INTERACT_FLAME          /* 0x00040000 */ (1 << 18)
 #define INTERACT_KOOPA_SHELL    /* 0x00080000 */ (1 << 19)
-#define INTERACT_BOUNCE_TOP2    /* 0x00100000 */ (1 << 20)
+#define INTERACT_TRAP_TURN      /* 0x00100000 */ (1 << 20)
 #define INTERACT_MR_BLIZZARD    /* 0x00200000 */ (1 << 21)
 #define INTERACT_HIT_FROM_BELOW /* 0x00400000 */ (1 << 22)
 #define INTERACT_TEXT           /* 0x00800000 */ (1 << 23)
@@ -90,8 +90,6 @@
 #define INT_STATUS_ATTACKED_MARIO        (1 << 13) /* 0x00002000 */
 #define INT_STATUS_WAS_ATTACKED          (1 << 14) /* 0x00004000 */
 #define INT_STATUS_INTERACTED            (1 << 15) /* 0x00008000 */
-#define INT_STATUS_TRAP_TURN             (1 << 20) /* 0x00100000 */
-#define INT_STATUS_HIT_MINE              (1 << 21) /* 0x00200000 */
 #define INT_STATUS_STOP_RIDING           (1 << 22) /* 0x00400000 */
 #define INT_STATUS_TOUCHED_BOB_OMB       (1 << 23) /* 0x00800000 */
 
@@ -107,7 +105,7 @@ struct BullyCollisionData {
 
 extern u8 D_03009AC8[];
 
-extern s16 mario_obj_angle_to_object(struct MarioState *, struct Object *);
+extern s16 mario_angle_to_object(struct MarioState *, struct Object *);
 extern void mario_stop_riding_object(struct MarioState *);
 extern void mario_grab_used_object(struct MarioState *);
 extern void mario_drop_held_object(struct MarioState *);
@@ -122,7 +120,7 @@ extern u32 mario_check_object_grab(struct MarioState *);
 extern u32 get_door_save_file_flag(struct Object *);
 extern void mario_process_interactions(struct MarioState *);
 extern void mario_handle_special_floors(struct MarioState *);
-extern BAD_RETURN(s32) init_bully_collision_data(
+extern void init_bully_collision_data(
     struct BullyCollisionData *data,
     f32 posX,
     f32 posZ,

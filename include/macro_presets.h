@@ -7,7 +7,7 @@
 
 struct MacroPreset
 {
-    /*0x00*/ const BehaviorScript *behavior;
+    /*0x00*/ const BehaviorScript *beh;
     /*0x04*/ s16 model;
     /*0x06*/ s16 param;
 };
@@ -151,7 +151,7 @@ struct MacroPreset MacroObjectPresets[] = {
     {bhvYellowCoin, MODEL_YELLOW_COIN, 0},
     {bhvYellowCoin, MODEL_YELLOW_COIN, 0},
     {bhvStaticObject, MODEL_KLEPTO, 0}, // unused
-    {bhvTweester, MODEL_TWEESTER, 0}, // unused
+    {bhvTornado, MODEL_TORNADO, 0}, // unused
     {bhvPokey, MODEL_NONE, 0},
     {bhvPokey, MODEL_NONE, 0}, // unused
     {bhvToxBox, MODEL_SSL_TOX_BOX, 0}, // unused

@@ -1,6 +1,6 @@
 // floating_platform.c.inc
 
-f32 floating_platform_find_home_y(void) {
+f32 func_802F54F8(void) {
     struct Surface *sp24;
     f32 sp20;
     f32 sp1C;
@@ -16,11 +16,11 @@ f32 floating_platform_find_home_y(void) {
     }
 }
 
-void floating_platform_act_0(void) {
-    s16 sp6 = (gMarioObject->header.gfx.pos[0] - o->oPosX) * coss(-1*o->oMoveAngleYaw)
-              + (gMarioObject->header.gfx.pos[2] - o->oPosZ) * sins(-1*o->oMoveAngleYaw);
-    s16 sp4 = (gMarioObject->header.gfx.pos[2] - o->oPosZ) * coss(-1*o->oMoveAngleYaw)
-              - (gMarioObject->header.gfx.pos[0] - o->oPosX) * sins(-1*o->oMoveAngleYaw);
+void func_802F55CC(void) {
+    s16 sp6 = (gMarioObject->header.gfx.pos[0] - o->oPosX) * coss(-o->oMoveAngleYaw)
+              + (gMarioObject->header.gfx.pos[2] - o->oPosZ) * sins(-o->oMoveAngleYaw);
+    s16 sp4 = (gMarioObject->header.gfx.pos[2] - o->oPosZ) * coss(-o->oMoveAngleYaw)
+              - (gMarioObject->header.gfx.pos[0] - o->oPosX) * sins(-o->oMoveAngleYaw);
 
     if (gMarioObject->platform == o) {
         o->oFaceAnglePitch = sp4 * 2;
@@ -48,7 +48,7 @@ void floating_platform_act_0(void) {
 }
 
 void bhv_floating_platform_loop(void) {
-    o->oHomeY = floating_platform_find_home_y();
+    o->oHomeY = func_802F54F8();
     if (o->oFloatingPlatformUnkF4 == 0)
         o->oAction = 0;
     else
@@ -56,7 +56,7 @@ void bhv_floating_platform_loop(void) {
 
     switch (o->oAction) {
         case 0:
-            floating_platform_act_0();
+            func_802F55CC();
             break;
 
         case 1:

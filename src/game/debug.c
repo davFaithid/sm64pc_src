@@ -7,10 +7,11 @@
 #include "print.h"
 #include "engine/surface_collision.h"
 #include "mario.h"
-#include "game_init.h"
+#include "game.h"
 #include "main.h"
 #include "debug.h"
 #include "object_list_processor.h"
+#include "room.h"
 #include "behavior_data.h"
 
 #define DEBUG_INFO_NOFLAGS (0 << 0)
@@ -57,16 +58,16 @@ s8 sDebugInfoButtonSeqID = 0;
 s16 sDebugInfoButtonSeq[] = { U_CBUTTONS, L_CBUTTONS, D_CBUTTONS, R_CBUTTONS, -1 };
 
 // most likely present in an ifdef DEBUG build. TODO: check DD version?
-void stub_debug_1(void) {
+void Stub802C9890(void) {
 }
 
-void stub_debug_2(void) {
+void Stub802C98A0(void) {
 }
 
-void stub_debug_3(void) {
+void Stub802C98B0(void) {
 }
 
-void stub_debug_4(void) {
+void Stub802C98C0(void) {
 }
 
 /*
@@ -204,7 +205,7 @@ void print_mapinfo(void) {
     struct Surface *pfloor;
     UNUSED f32 bgY;
     UNUSED f32 water;
-    UNUSED s32 area;
+    // s32 area;
     // s32 angY;
     //
     // angY = gCurrentObject->oMoveAngleYaw / 182.044000;
@@ -391,10 +392,7 @@ static void try_change_debug_page(void) {
  * sDebugSysCursor. This is used to adjust enemy and effect behaviors
  * on the fly. (unused)
  */
-#ifndef VERSION_SH
-static
-#endif
-void try_modify_debug_controls(void) {
+static void try_modify_debug_controls(void) {
     s32 sp4;
 
     if (gPlayer1Controller->buttonPressed & Z_TRIG) {
@@ -439,7 +437,7 @@ void try_modify_debug_controls(void) {
 }
 
 // possibly a removed debug control (TODO: check DD)
-void stub_debug_5(void) {
+void stub_802CA5D0(void) {
 }
 
 /*
@@ -524,11 +522,7 @@ void try_do_mario_debug_object_spawn(void) {
 }
 
 // TODO: figure out what this is
-#ifndef VERSION_SH
-static
-#endif
-void debug_print_obj_move_flags(void) {
-#ifndef VERSION_EU // TODO: Is there a better way to diff this? static EU doesn't seem to work.
+static void Unknown802CA8B4(void) {
     if (gCurrentObject->oMoveFlags & OBJ_MOVE_LANDED) {
         print_debug_top_down_objectinfo("BOUND   %x", gCurrentObject->oMoveFlags);
     }
@@ -556,11 +550,10 @@ void debug_print_obj_move_flags(void) {
     if (gCurrentObject->oMoveFlags & OBJ_MOVE_8) {
         print_debug_top_down_objectinfo("OUT SCOPE %x", gCurrentObject->oMoveFlags);
     }
-#endif
 }
 
 // unused, what is this?
-void debug_enemy_unknown(s16 *enemyArr) {
+void Unknown802CAA84(s16 *enemyArr) {
     // copy b1-b4 over to an unknown s16 array
     enemyArr[4] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][1];
     enemyArr[5] = gDebugInfo[DEBUG_PAGE_ENEMYINFO][2];

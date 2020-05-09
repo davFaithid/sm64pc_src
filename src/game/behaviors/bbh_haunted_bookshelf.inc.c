@@ -32,11 +32,11 @@ void bhv_haunted_bookshelf_loop(void) {
         case HAUNTED_BOOKSHELF_ACT_RECEDE:
             // Move the bookshelf and play the sound
             o->oPosX += 5.0f;
-            cur_obj_play_sound_1(SOUND_ENV_ELEVATOR4_2);
+            PlaySound(SOUND_ENV_ELEVATOR4_2);
 
             // Delete the object after 102 frames
             if (o->oTimer > 101) {
-                obj_mark_for_deletion(o);
+                mark_object_for_deletion(o);
             }
 
             break;

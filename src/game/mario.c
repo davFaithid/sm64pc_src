@@ -8,7 +8,8 @@
 #include "behavior_data.h"
 #include "camera.h"
 #include "mario_misc.h"
-#include "game_init.h"
+#include "display.h"
+#include "game.h"
 #include "engine/graph_node.h"
 #include "interaction.h"
 #include "level_update.h"
@@ -30,7 +31,6 @@
 #include "sound_init.h"
 #include "engine/surface_collision.h"
 #include "level_table.h"
-#include "thread6.h"
 
 u32 unused80339F10;
 s8 filler80339F1C[20];
@@ -64,7 +64,7 @@ s16 set_mario_animation(struct MarioState *m, s32 targetAnimID) {
     struct Object *o = m->marioObj;
     struct Animation *targetAnim = m->animation->targetAnim;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (func_80278AD4(m->animation, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -97,7 +97,7 @@ s16 set_mario_anim_with_accel(struct MarioState *m, s32 targetAnimID, s32 accel)
     struct Object *o = m->marioObj;
     struct Animation *targetAnim = m->animation->targetAnim;
 
-    if (load_patchable_table(m->animation, targetAnimID)) {
+    if (func_80278AD4(m->animation, targetAnimID)) {
         targetAnim->values = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->values);
         targetAnim->index = (void *) VIRTUAL_TO_PHYSICAL((u8 *) targetAnim + (uintptr_t) targetAnim->index);
     }
@@ -278,15 +278,15 @@ void adjust_sound_for_speed(struct MarioState *m) {
 void play_sound_and_spawn_particles(struct MarioState *m, u32 soundBits, u32 waveParticleType) {
     if (m->terrainSoundAddend == (SOUND_TERRAIN_WATER << 16)) {
         if (waveParticleType != 0) {
-            m->particleFlags |= PARTICLE_SHALLOW_WATER_SPLASH;
+            m->particleFlags |= PARTICLE_12;
         } else {
-            m->particleFlags |= PARTICLE_SHALLOW_WATER_WAVE;
+            m->particleFlags |= PARTICLE_8;
         }
     } else {
         if (m->terrainSoundAddend == (SOUND_TERRAIN_SAND << 16)) {
-            m->particleFlags |= PARTICLE_DIRT;
+            m->particleFlags |= PARTICLE_15;
         } else if (m->terrainSoundAddend == (SOUND_TERRAIN_SNOW << 16)) {
-            m->particleFlags |= PARTICLE_SNOW;
+            m->particleFlags |= PARTICLE_14;
         }
     }
 
@@ -350,8 +350,7 @@ void play_mario_heavy_landing_sound_once(struct MarioState *m, u32 soundBits) {
 void play_mario_sound(struct MarioState *m, s32 actionSound, s32 marioSound) {
     if (actionSound == SOUND_ACTION_TERRAIN_JUMP) {
         play_mario_action_sound(
-                m, (m->flags & MARIO_METAL_CAP) ? (s32)SOUND_ACTION_METAL_JUMP 
-                                                : (s32)SOUND_ACTION_TERRAIN_JUMP, 1);
+            m, (m->flags & MARIO_METAL_CAP) ? SOUND_ACTION_METAL_JUMP : SOUND_ACTION_TERRAIN_JUMP, 1);
     } else {
         play_sound_if_no_flag(m, actionSound, MARIO_ACTION_SOUND_PLAYED);
     }
@@ -722,12 +721,12 @@ void update_mario_sound_and_camera(struct MarioState *m) {
     s32 camPreset = m->area->camera->mode;
 
     if (action == ACT_FIRST_PERSON) {
-        raise_background_noise(2);
+        func_80248CB8(2);
         gCameraMovementFlags &= ~CAM_MOVE_C_UP_MODE;
         // Go back to the last camera mode
         set_camera_mode(m->area->camera, -1, 1);
     } else if (action == ACT_SLEEPING) {
-        raise_background_noise(2);
+        func_80248CB8(2);
     }
 
     if (!(action & (ACT_FLAG_SWIMMING | ACT_FLAG_METAL_WATER))) {
@@ -1215,7 +1214,7 @@ void squish_mario_model(struct MarioState *m) {
         }
         // If timer is less than 16, rubber-band Mario's size scale up and down.
         else if (m->squishTimer <= 16) {
-            m->squishTimer -= 1;
+            m->squishTimer--;
 
             m->marioObj->header.gfx.scale[1] =
                 1.0f - ((sSquishScaleOverTime[15 - m->squishTimer] * 0.6f) / 100.0f);
@@ -1224,7 +1223,7 @@ void squish_mario_model(struct MarioState *m) {
 
             m->marioObj->header.gfx.scale[2] = m->marioObj->header.gfx.scale[0];
         } else {
-            m->squishTimer -= 1;
+            m->squishTimer--;
 
             vec3f_set(m->marioObj->header.gfx.scale, 1.4f, 0.4f, 1.4f);
         }
@@ -1406,7 +1405,7 @@ void update_mario_inputs(struct MarioState *m) {
 
     // This function is located near other unused trampoline functions,
     // perhaps logically grouped here with the timers.
-    stub_mario_step_1(m);
+    nop_80254E3C(m);
 
     if (m->wallKickTimer > 0) {
         m->wallKickTimer--;
@@ -1441,11 +1440,9 @@ void set_submerged_cam_preset_and_spawn_bubbles(struct MarioState *m) {
                 set_camera_mode(m->area->camera, CAMERA_MODE_WATER_SURFACE, 1);
             }
 
-            // As long as Mario isn't drowning or at the top
-            // of the water with his head out, spawn bubbles.
             if ((m->action & ACT_FLAG_INTANGIBLE) == 0) {
                 if ((m->pos[1] < (f32)(m->waterLevel - 160)) || (m->faceAngle[0] < -0x800)) {
-                    m->particleFlags |= PARTICLE_BUBBLE;
+                    m->particleFlags |= PARTICLE_5;
                 }
             }
         }
@@ -1500,16 +1497,6 @@ void update_mario_health(struct MarioState *m) {
         // Play a noise to alert the player when Mario is close to drowning.
         if (((m->action & ACT_GROUP_MASK) == ACT_GROUP_SUBMERGED) && (m->health < 0x300)) {
             play_sound(SOUND_MOVING_ALMOST_DROWNING, gDefaultSoundArgs);
-#ifdef VERSION_SH
-            if (!gRumblePakTimer) {
-                gRumblePakTimer = 36;
-                if (is_rumble_finished_and_queue_empty()) {
-                    queue_rumble_data(3, 30);
-                }
-            }
-        } else {
-            gRumblePakTimer = 0;
-#endif
         }
     }
 }
@@ -1538,7 +1525,7 @@ void mario_reset_bodystate(struct MarioState *m) {
     bodyState->eyeState = MARIO_EYES_BLINK;
     bodyState->handState = MARIO_HAND_FISTS;
     bodyState->modelState = 0;
-    bodyState->wingFlutter = FALSE;
+    bodyState->unk07 = 0;
 
     m->flags &= ~MARIO_METAL_SHOCK;
 }
@@ -1663,7 +1650,7 @@ void mario_update_hitbox_and_cap_model(struct MarioState *m) {
 
     if ((m->flags & MARIO_TELEPORTING) && (m->fadeWarpOpacity != 0xFF)) {
         bodyState->modelState &= ~0xFF;
-        bodyState->modelState |= (0x100 | m->fadeWarpOpacity);
+        bodyState->modelState |= (m->fadeWarpOpacity | 0x100);
     }
 }
 
@@ -1686,21 +1673,6 @@ static void debug_update_mario_cap(u16 button, s32 flags, u16 capTimer, u16 capM
         play_cap_music(capMusic);
     }
 }
-
-#ifdef VERSION_SH
-void func_sh_8025574C(void) {
-    if (gMarioState->particleFlags & PARTICLE_HORIZONTAL_STAR) {
-        queue_rumble_data(5, 80);
-    } else if (gMarioState->particleFlags & PARTICLE_VERTICAL_STAR) {
-        queue_rumble_data(5, 80);
-    } else if (gMarioState->particleFlags & PARTICLE_TRIANGLE) {
-        queue_rumble_data(5, 80);
-    }
-    if(gMarioState->heldObj && gMarioState->heldObj->behavior == segmented_to_virtual(bhvBobomb)) {
-        reset_rumble_timers();
-    }
-}
-#endif
 
 /**
  * Main function for executing Mario's behavior.
@@ -1765,14 +1737,14 @@ s32 execute_mario_action(UNUSED struct Object *o) {
         // Both of the wind handling portions play wind audio only in
         // non-Japanese releases.
         if (gMarioState->floor->type == SURFACE_HORIZONTAL_WIND) {
-            spawn_wind_particles(0, (gMarioState->floor->force << 8));
+            func_802ADC20(0, (gMarioState->floor->force << 8));
 #ifndef VERSION_JP
             play_sound(SOUND_ENV_WIND2, gMarioState->marioObj->header.gfx.cameraToObject);
 #endif
         }
 
         if (gMarioState->floor->type == SURFACE_VERTICAL_WIND) {
-            spawn_wind_particles(1, 0);
+            func_802ADC20(1, 0);
 #ifndef VERSION_JP
             play_sound(SOUND_ENV_WIND2, gMarioState->marioObj->header.gfx.cameraToObject);
 #endif
@@ -1780,9 +1752,6 @@ s32 execute_mario_action(UNUSED struct Object *o) {
 
         play_infinite_stairs_music();
         gMarioState->marioObj->oInteractStatus = 0;
-#ifdef VERSION_SH
-        func_sh_8025574C();
-#endif
 
         return gMarioState->particleFlags;
     }
@@ -1851,7 +1820,7 @@ void init_mario(void) {
 
     mario_reset_bodystate(gMarioState);
     update_mario_info_for_cam(gMarioState);
-    gMarioState->marioBodyState->punchState = 0;
+    gMarioState->marioBodyState->unk0B = 0;
 
     gMarioState->marioObj->oPosX = gMarioState->pos[0];
     gMarioState->marioObj->oPosY = gMarioState->pos[1];

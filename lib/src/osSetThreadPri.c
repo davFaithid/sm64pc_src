@@ -1,5 +1,8 @@
 #include "libultra_internal.h"
 
+extern OSThread *D_803348A0;
+extern OSThread *D_80334898;
+
 void osSetThreadPri(OSThread *thread, OSPri pri) {
     register u32 int_disabled = __osDisableInt();
     if (thread == NULL) {

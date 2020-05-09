@@ -3,7 +3,7 @@
 void bhv_1up_interact(void) {
     UNUSED s32 sp1C;
 
-    if (obj_check_if_collided_with_object(o, gMarioObject) == 1) {
+    if (are_objects_collided(o, gMarioObject) == 1) {
         play_sound(SOUND_GENERAL_COLLECT_1UP, gDefaultSoundArgs);
         gMarioState->numLives++;
         o->activeFlags = 0;
@@ -28,7 +28,7 @@ void bhv_1up_init(void) {
     }
 }
 
-void one_up_loop_in_air(void) {
+void func_802F2D40(void) {
     if (o->oTimer < 5) {
         o->oVelY = 40.0f;
     } else {
@@ -39,7 +39,7 @@ void one_up_loop_in_air(void) {
     }
 }
 
-void pole_1up_move_towards_mario(void) {
+void func_802F2E18(void) {
     f32 sp34 = gMarioObject->header.gfx.pos[0] - o->oPosX;
     f32 sp30 = gMarioObject->header.gfx.pos[1] + 120.0f - o->oPosY;
     f32 sp2C = gMarioObject->header.gfx.pos[2] - o->oPosZ;
@@ -52,7 +52,7 @@ void pole_1up_move_towards_mario(void) {
     bhv_1up_interact();
 }
 
-void one_up_move_away_from_mario(s16 sp1A) {
+void func_802F2F8C(s16 sp1A) {
     o->oForwardVel = 8.0f;
     o->oMoveAngleYaw = o->oAngleToMario + 0x8000;
     bhv_1up_interact();
@@ -74,10 +74,10 @@ void bhv_1up_walking_loop(void) {
             if (o->oTimer == 0)
                 play_sound(SOUND_GENERAL2_1UP_APPEAR, gDefaultSoundArgs);
 
-            one_up_loop_in_air();
+            func_802F2D40();
 
             if (o->oTimer == 37) {
-                cur_obj_become_tangible();
+                obj_become_tangible();
                 o->oAction = 1;
                 o->oForwardVel = 2.0f;
             }
@@ -111,10 +111,10 @@ void bhv_1up_running_away_loop(void) {
             if (o->oTimer == 0)
                 play_sound(SOUND_GENERAL2_1UP_APPEAR, gDefaultSoundArgs);
 
-            one_up_loop_in_air();
+            func_802F2D40();
 
             if (o->oTimer == 37) {
-                cur_obj_become_tangible();
+                obj_become_tangible();
                 o->oAction = 1;
                 o->oForwardVel = 8.0f;
             }
@@ -122,7 +122,7 @@ void bhv_1up_running_away_loop(void) {
 
         case 1:
             spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
-            one_up_move_away_from_mario(sp26);
+            func_802F2F8C(sp26);
             break;
 
         case 2:
@@ -134,7 +134,7 @@ void bhv_1up_running_away_loop(void) {
     set_object_visibility(o, 3000);
 }
 
-void sliding_1up_move(void) {
+void func_802F3328(void) {
     s16 sp1E;
 
     sp1E = object_step();
@@ -161,7 +161,7 @@ void bhv_1up_sliding_loop(void) {
             break;
 
         case 1:
-            sliding_1up_move();
+            func_802F3328();
             break;
 
         case 2:
@@ -192,7 +192,7 @@ void bhv_1up_jump_on_approach_loop(void) {
 
         case 1:
             sp26 = object_step();
-            one_up_move_away_from_mario(sp26);
+            func_802F2F8C(sp26);
             spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
             break;
 
@@ -210,18 +210,18 @@ void bhv_1up_hidden_loop(void) {
     s16 sp26;
     switch (o->oAction) {
         case 0:
-            o->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
+            o->header.gfx.node.flags |= 0x10;
             if (o->o1UpHiddenUnkF4 == o->oBehParams2ndByte) {
                 o->oVelY = 40.0f;
                 o->oAction = 3;
-                o->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
+                o->header.gfx.node.flags &= ~0x10;
                 play_sound(SOUND_GENERAL2_1UP_APPEAR, gDefaultSoundArgs);
             }
             break;
 
         case 1:
             sp26 = object_step();
-            one_up_move_away_from_mario(sp26);
+            func_802F2F8C(sp26);
             spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
             break;
 
@@ -236,10 +236,10 @@ void bhv_1up_hidden_loop(void) {
             if (o->oTimer >= 18)
                 spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
 
-            one_up_loop_in_air();
+            func_802F2D40();
 
             if (o->oTimer == 37) {
-                cur_obj_become_tangible();
+                obj_become_tangible();
                 o->oAction = 1;
                 o->oForwardVel = 8.0f;
             }
@@ -249,8 +249,8 @@ void bhv_1up_hidden_loop(void) {
 
 void bhv_1up_hidden_trigger_loop(void) {
     struct Object *sp1C;
-    if (obj_check_if_collided_with_object(o, gMarioObject) == 1) {
-        sp1C = cur_obj_nearest_object_with_behavior(bhvHidden1up);
+    if (are_objects_collided(o, gMarioObject) == 1) {
+        sp1C = obj_nearest_object_with_behavior(bhvHidden1up);
         if (sp1C != NULL)
             sp1C->o1UpHiddenUnkF4++;
 
@@ -262,17 +262,17 @@ void bhv_1up_hidden_in_pole_loop(void) {
     UNUSED s16 sp26;
     switch (o->oAction) {
         case 0:
-            o->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
+            o->header.gfx.node.flags |= 0x10;
             if (o->o1UpHiddenUnkF4 == o->oBehParams2ndByte) {
                 o->oVelY = 40.0f;
                 o->oAction = 3;
-                o->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
+                o->header.gfx.node.flags &= ~0x10;
                 play_sound(SOUND_GENERAL2_1UP_APPEAR, gDefaultSoundArgs);
             }
             break;
 
         case 1:
-            pole_1up_move_towards_mario();
+            func_802F2E18();
             sp26 = object_step();
             break;
 
@@ -281,10 +281,10 @@ void bhv_1up_hidden_in_pole_loop(void) {
             if (o->oTimer >= 18)
                 spawn_object(o, MODEL_NONE, bhvSparkleSpawn);
 
-            one_up_loop_in_air();
+            func_802F2D40();
 
             if (o->oTimer == 37) {
-                cur_obj_become_tangible();
+                obj_become_tangible();
                 o->oAction = 1;
                 o->oForwardVel = 10.0f;
             }
@@ -295,8 +295,8 @@ void bhv_1up_hidden_in_pole_loop(void) {
 void bhv_1up_hidden_in_pole_trigger_loop(void) {
     struct Object *sp1C;
 
-    if (obj_check_if_collided_with_object(o, gMarioObject) == 1) {
-        sp1C = cur_obj_nearest_object_with_behavior(bhvHidden1upInPole);
+    if (are_objects_collided(o, gMarioObject) == 1) {
+        sp1C = obj_nearest_object_with_behavior(bhvHidden1upInPole);
         if (sp1C != NULL) {
             sp1C->o1UpHiddenUnkF4++;
             ;

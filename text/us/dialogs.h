@@ -1,21 +1,5 @@
 // Parameters: dialog enum ID, (unused), lines per box, left offset, width
 
-#ifdef VERSION_EU
-#define COMRADES "friends"
-#define PLASTERED "splattered"
-#define SCAM_ME "cheat!\n"
-#define SCRAM "get lost"
-#define YOU_CANT_SWIM_IN_IT "Its too heavy to swim\nwith."
-#define GIVE_UP "give up"
-#else
-#define COMRADES "comrades"
-#define PLASTERED "plastered"
-#define SCAM_ME "scam\nME. "
-#define SCRAM "scram--"
-#define YOU_CANT_SWIM_IN_IT "You can't swim in it."
-#define GIVE_UP "give"
-#endif
-
 DEFINE_DIALOG(DIALOG_000, 1, 6, 30, 200, _("\
 Wow! You're smack in the\n\
 middle of the battlefield.\n\
@@ -27,7 +11,7 @@ First, talk to the\n\
 Bob-omb Buddy. (Press [B]\n\
 to talk.) He'll certainly\n\
 help you out, and so will\n\
-his " COMRADES " in other\n\
+his comrades in other\n\
 areas.\n\
 To read signs, stop, face\n\
 them and press [B]. Press [A]\n\
@@ -39,7 +23,7 @@ and pressing [B]."))
 DEFINE_DIALOG(DIALOG_001, 1, 4, 95, 200, _("\
 Watch out! If you wander\n\
 around here, you're liable\n\
-to be " PLASTERED " by a\n\
+to be plastered by a\n\
 water bomb!\n\
 Those enemy Bob-ombs love\n\
 to fight, and they're\n\
@@ -123,8 +107,8 @@ Ready....\n\
 //Go!////Don't Go"))
 
 DEFINE_DIALOG(DIALOG_006, 1, 3, 30, 200, _("\
-Hey!!! Don't try to " SCAM_ME
-"You've gotta run\n\
+Hey!!! Don't try to scam\n\
+ME. You've gotta run\n\
 the whole course.\n\
 Later. Look me up when\n\
 you want to race for\n\
@@ -285,7 +269,7 @@ Princess Toadstool"))
 DEFINE_DIALOG(DIALOG_021, 1, 5, 95, 200, _("\
 Welcome.\n\
 No one's home!\n\
-Now " SCRAM "\n\
+Now scram--\n\
 and don't come back!\n\
 Gwa ha ha!"))
 
@@ -784,8 +768,8 @@ by enemy attacks.\n\
 You don't even have to\n\
 breathe while wearing it.\n\
 \n\
-The only problem:\n"
-YOU_CANT_SWIM_IN_IT))
+The only problem:\n\
+You can't swim in it."))
 
 DEFINE_DIALOG(DIALOG_063, 1, 5, 30, 200, _("\
 The Vanish Cap is inside\n\
@@ -1866,7 +1850,7 @@ Waaaaaaaaaaaaaaaaa!!!"))
 
 DEFINE_DIALOG(DIALOG_152, 1, 3, 30, 200, _("\
 Owwch! Uncle! Uncle!\n\
-Okay, I " GIVE_UP ". Take this\n\
+Okay, I give. Take this\n\
 Star!\n\
 Whew! I feel better now.\n\
 I don't really need it\n\
@@ -1969,17 +1953,6 @@ fast to do a Body Slide\n\
 attack. To stand while\n\
 sliding, press [A] or [B]."))
 
-#ifdef VERSION_EU
-#define KEEP_ON_PLAYING ".."
-#else
-#define KEEP_ON_PLAYING "\n\
-We want you to keep on\n\
-playing, so we have a\n\
-little something for you.\n\
-We hope that you like it!\n\
-Enjoy!!!"
-#endif
-
 DEFINE_DIALOG(DIALOG_161, 1, 4, 30, 200, _("\
 Mario!!!\n\
 It that really you???\n\
@@ -2000,8 +1973,12 @@ message for you.\n\
 『Thanks for playing Super\n\
 Mario 64! This is the\n\
 end of the game, but not\n\
-the end of the fun." \
-KEEP_ON_PLAYING "』\n\
+the end of the fun.\n\
+We want you to keep on\n\
+playing, so we have a\n\
+little something for you.\n\
+We hope that you like it!\n\
+Enjoy!!!』\n\
 \n\
 The Super Mario 64 Team"))
 

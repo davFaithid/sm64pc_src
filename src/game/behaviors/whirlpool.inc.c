@@ -19,11 +19,11 @@ void bhv_whirlpool_init(void) {
     o->oFaceAngleRoll = 0;
 }
 
-void whirlpool_set_hitbox(void) {
-    obj_set_hitbox(o, &sWhirlpoolHitbox);
+void func_802E70A8(void) {
+    set_object_hitbox(o, &sWhirlpoolHitbox);
 }
 
-void whirpool_orient_graph(void) {
+void func_802E70DC(void) {
     f32 cosPitch = coss(o->oFaceAnglePitch);
     f32 sinPitch = sins(o->oFaceAnglePitch);
     f32 cosRoll = coss(o->oFaceAngleRoll);
@@ -36,7 +36,7 @@ void whirpool_orient_graph(void) {
 
 void bhv_whirlpool_loop(void) {
     if (o->oDistanceToMario < 5000.0f) {
-        o->header.gfx.node.flags &= ~GRAPH_RENDER_INVISIBLE;
+        o->header.gfx.node.flags &= ~0x10; /* bit 4 */
 
         // not sure if actually an array
         gEnvFxBubbleConfig[ENVFX_STATE_PARTICLECOUNT] = 60;
@@ -49,17 +49,17 @@ void bhv_whirlpool_loop(void) {
         gEnvFxBubbleConfig[ENVFX_STATE_PITCH] = o->oWhirlpoolInitFacePitch;
         gEnvFxBubbleConfig[ENVFX_STATE_YAW] = o->oWhirlpoolInitFaceRoll;
 
-        whirpool_orient_graph();
+        func_802E70DC();
 
         o->oFaceAngleYaw += 0x1F40;
     } else {
-        o->header.gfx.node.flags |= GRAPH_RENDER_INVISIBLE;
+        o->header.gfx.node.flags |= 0x10; /* bit 4 */
         gEnvFxBubbleConfig[ENVFX_STATE_PARTICLECOUNT] = 0;
     }
 
-    cur_obj_play_sound_1(SOUND_ENV_WATER);
+    PlaySound(SOUND_ENV_WATER);
 
-    whirlpool_set_hitbox();
+    func_802E70A8();
 }
 
 void bhv_jet_stream_loop(void) {
@@ -71,5 +71,5 @@ void bhv_jet_stream_loop(void) {
     } else
         gEnvFxBubbleConfig[ENVFX_STATE_PARTICLECOUNT] = 0;
 
-    cur_obj_play_sound_1(SOUND_ENV_WATER);
+    PlaySound(SOUND_ENV_WATER);
 }

@@ -107,7 +107,7 @@
 #define /*0x14C*/ oAction                     OBJECT_FIELD_S32(0x31)
 #define /*0x150*/ oSubAction                  OBJECT_FIELD_S32(0x32)
 #define /*0x154*/ oTimer                      OBJECT_FIELD_S32(0x33)
-#define /*0x158*/ oBounciness                 OBJECT_FIELD_F32(0x34)
+#define /*0x158*/ oBounce                     OBJECT_FIELD_F32(0x34)
 #define /*0x15C*/ oDistanceToMario            OBJECT_FIELD_F32(0x35)
 #define /*0x160*/ oAngleToMario               OBJECT_FIELD_S32(0x36)
 #define /*0x164*/ oHomeX                      OBJECT_FIELD_F32(0x37)
@@ -129,10 +129,10 @@
 // 0x1A4 is unused, possibly related to 0x1A8 in removed macro purposes.
 #define /*0x1A8*/ oUnk1A8                     OBJECT_FIELD_U32(0x48)
 // 0x1AC-0x1B2 (0x48-0x4A) are object specific and defined below the common fields.
-#define /*0x1B4*/ oWallAngle                  OBJECT_FIELD_S32(0x4B)
+#define /*0x1B4*/ oWallAngle                  OBJECT_FIELD_U32(0x4B)
 #define /*0x1B8*/ oFloorType                  OBJECT_FIELD_S16(0x4C, 0)
 #define /*0x1BA*/ oFloorRoom                  OBJECT_FIELD_S16(0x4C, 1)
-#define /*0x1BC*/ oAngleToHome                OBJECT_FIELD_S32(0x4D)
+#define /*0x1BC*/ oUnk1BC                     OBJECT_FIELD_S32(0x4D)
 #define /*0x1C0*/ oFloor                      OBJECT_FIELD_SURFACE(0x4E)
 #define /*0x1C4*/ oDeathSound                 OBJECT_FIELD_S32(0x4F)
 
@@ -483,19 +483,19 @@
 #define /*0x0F4*/ oFireSpitterScaleVel OBJECT_FIELD_F32(0x1B)
 
 /* Blue Fish */
-#define /*0x0F4*/ oBlueFishRandomVel   OBJECT_FIELD_F32(0x1B)
-#define /*0x0F8*/ oBlueFishRandomTime  OBJECT_FIELD_S32(0x1C)
-#define /*0x100*/ oBlueFishRandomAngle OBJECT_FIELD_F32(0x1E)
+#define /*0x0F4*/ oBlueFishUnkF4  OBJECT_FIELD_F32(0x1B)
+#define /*0x0F8*/ oBlueFishUnkF8  OBJECT_FIELD_S32(0x1C)
+#define /*0x100*/ oBlueFishUnk100 OBJECT_FIELD_F32(0x1E)
 
 /* Fish Group */
-#define /*0x0F4*/ oFishWaterLevel      OBJECT_FIELD_F32(0x1B)
-#define /*0x0F8*/ oFishPosY            OBJECT_FIELD_F32(0x1C)
-#define /*0x0FC*/ oFishRandomOffset    OBJECT_FIELD_F32(0x1D)
-#define /*0x100*/ oFishRandomSpeed     OBJECT_FIELD_S32(0x1E)
-#define /*0x104*/ oFishRespawnDistance OBJECT_FIELD_F32(0x1F)
-#define /*0x108*/ oFishRandomVel       OBJECT_FIELD_F32(0x20)
-#define /*0x10C*/ oFishDepthDistance   OBJECT_FIELD_F32(0x21)
-#define /*0x110*/ oFishActiveDistance  OBJECT_FIELD_F32(0x22)
+#define /*0x0F4*/ oFishGroupUnkF4  OBJECT_FIELD_F32(0x1B)
+#define /*0x0F8*/ oFishGroupUnkF8  OBJECT_FIELD_F32(0x1C)
+#define /*0x0FC*/ oFishGroupUnkFC  OBJECT_FIELD_F32(0x1D)
+#define /*0x100*/ oFishGroupUnk100 OBJECT_FIELD_S32(0x1E)
+#define /*0x104*/ oFishGroupUnk104 OBJECT_FIELD_F32(0x1F)
+#define /*0x108*/ oFishGroupUnk108 OBJECT_FIELD_F32(0x20)
+#define /*0x10C*/ oFishGroupUnk10C OBJECT_FIELD_F32(0x21)
+#define /*0x110*/ oFishGroupUnk110 OBJECT_FIELD_F32(0x22)
 
 /* Flame */
 #define /*0x0F4*/ oFlameUnkF4  OBJECT_FIELD_F32(0x1B)
@@ -752,11 +752,11 @@
 #define /*0x108*/ oSmallPenguinUnk108 OBJECT_FIELD_F32(0x20)
 #define /*0x110*/ oSmallPenguinUnk110 OBJECT_FIELD_S32(0x22)
 
-/* SL Walking Penguin */
-#define /*0x100*/ oSLWalkingPenguinWindCollisionXPos OBJECT_FIELD_F32(0x1E)
-#define /*0x104*/ oSLWalkingPenguinWindCollisionZPos OBJECT_FIELD_F32(0x1F)
-#define /*0x10C*/ oSLWalkingPenguinCurStep           OBJECT_FIELD_S32(0x21)
-#define /*0x110*/ oSLWalkingPenguinCurStepTimer      OBJECT_FIELD_S32(0x22)
+/* Walking Penguin */
+#define /*0x100*/ oWalkingPenguinUnk100 OBJECT_FIELD_F32(0x1E)
+#define /*0x104*/ oWalkingPenguinUnk104 OBJECT_FIELD_F32(0x1F)
+#define /*0x10C*/ oWalkingPenguinUnk10C OBJECT_FIELD_S32(0x21)
+#define /*0x110*/ oWalkingPenguinUnk110 OBJECT_FIELD_S32(0x22)
 
 /* Piranha Plant */
 #define /*0x0F4*/ oPiranhaPlantSleepMusicState OBJECT_FIELD_S32(0x1B)
@@ -884,19 +884,19 @@
 #define /*0x0F4*/ oSnowmansHeadUnkF4 OBJECT_FIELD_S32(0x1B)
 
 /* Snowman Wind Blowing */
-#define /*0x0F4*/ oSLSnowmanWindOriginalYaw OBJECT_FIELD_S32(0x1B)
+#define /*0x0F4*/ oSnowmanWindBlowingUnkF4 OBJECT_FIELD_S32(0x1B)
 
 /* Snufit */
-#define /*0x0F4*/ oSnufitRecoil          OBJECT_FIELD_S32(0x1B)
-#define /*0x0F8*/ oSnufitScale           OBJECT_FIELD_F32(0x1C)
-#define /*0x100*/ oSnufitCircularPeriod  OBJECT_FIELD_S32(0x1E)
-#define /*0x104*/ oSnufitBodyScalePeriod OBJECT_FIELD_S32(0x1F)
-#define /*0x108*/ oSnufitBodyBaseScale   OBJECT_FIELD_S32(0x20)
-#define /*0x10C*/ oSnufitBullets         OBJECT_FIELD_S32(0x21)
-#define /*0x1AC*/ oSnufitXOffset         OBJECT_FIELD_S16(0x49, 0)
-#define /*0x1AE*/ oSnufitYOffset         OBJECT_FIELD_S16(0x49, + 1)
-#define /*0x1B0*/ oSnufitZOffset         OBJECT_FIELD_S16(0x4A, 0)
-#define /*0x1B2*/ oSnufitBodyScale       OBJECT_FIELD_S16(0x4A, + 1)
+#define /*0x0F4*/ oSnufitUnkF4  OBJECT_FIELD_S32(0x1B)
+#define /*0x0F8*/ oSnufitUnkF8  OBJECT_FIELD_F32(0x1C)
+#define /*0x100*/ oSnufitUnk100 OBJECT_FIELD_S32(0x1E)
+#define /*0x104*/ oSnufitUnk104 OBJECT_FIELD_S32(0x1F)
+#define /*0x108*/ oSnufitUnk108 OBJECT_FIELD_S32(0x20)
+#define /*0x10C*/ oSnufitUnk10C OBJECT_FIELD_S32(0x21)
+#define /*0x1AC*/ oSnufitUnk1AC OBJECT_FIELD_S16(0x49, 0)
+#define /*0x1AE*/ oSnufitUnk1AE OBJECT_FIELD_S16(0x49, + 1)
+#define /*0x1B0*/ oSnufitUnk1B0 OBJECT_FIELD_S16(0x4A, 0)
+#define /*0x1B2*/ oSnufitUnk1B2 OBJECT_FIELD_S16(0x4A, + 1)
 
 /* Spindel */
 #define /*0x0F4*/ oSpindelUnkF4 OBJECT_FIELD_S32(0x1B)
@@ -1042,8 +1042,8 @@
 #define /*0x0F4*/ oTumblingBridgeUnkF4 OBJECT_FIELD_S32(0x1B)
 
 /* Tweester */
-#define /*0x0F4*/ oTweesterScaleTimer OBJECT_FIELD_S32(0x1B)
-#define /*0x0F8*/ oTweesterUnused     OBJECT_FIELD_S32(0x1C)
+#define /*0x0F4*/ oTweesterUnkF4 OBJECT_FIELD_S32(0x1B)
+#define /*0x0F8*/ oTweesterUnkF8 OBJECT_FIELD_S32(0x1C)
 
 /* Ukiki */
 #define /*0x0F4*/ oUkikiTauntCounter   OBJECT_FIELD_S16(0x1B, 0)
@@ -1118,7 +1118,7 @@
 #define /*0x0F8*/ oWaterRingMgrLastRingCollected OBJECT_FIELD_S32(0x1C)
 
 /* Wave Trail */
-#define /*0x0F8*/ oWaveTrailSize OBJECT_FIELD_F32(0x1C)
+#define /*0x0F8*/ oWaveTrailUnkF8 OBJECT_FIELD_F32(0x1C)
 
 /* Whirlpool */
 #define /*0x0F4*/ oWhirlpoolInitFacePitch OBJECT_FIELD_S32(0x1B)
@@ -1130,7 +1130,7 @@
 #define /*0x0FC*/ oWhitePuffUnkFC OBJECT_FIELD_S32(0x1D)
 
 /* White Wind Particle */
-#define /*0x0F4*/ oStrongWindParticlePenguinObj OBJECT_FIELD_OBJ(0x1B)
+#define /*0x0F4*/ oWhiteWindParticleUnkF4 OBJECT_FIELD_OBJ(0x1B)
 
 /* Whomp */
 #define /*0x0F8*/ oWhompUnkF8 OBJECT_FIELD_S32(0x1C)

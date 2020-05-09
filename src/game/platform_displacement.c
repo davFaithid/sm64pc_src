@@ -4,6 +4,7 @@
 #include "platform_displacement.h"
 #include "engine/math_util.h"
 #include "object_helpers.h"
+#include "object_helpers2.h"
 #include "mario.h"
 #include "engine/behavior_script.h"
 #include "level_update.h"

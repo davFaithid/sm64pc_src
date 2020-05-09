@@ -10,13 +10,13 @@ void bhv_big_boulder_init(void) {
     o->oBuoyancy = 2.0f;
 }
 
-void boulder_act_1(void) {
+void func_802F05DC(void) {
     s16 sp1E;
 
     sp1E = object_step_without_floor_orient();
     if ((sp1E & 0x09) == 0x01 && o->oVelY > 10.0f) {
-        cur_obj_play_sound_2(SOUND_GENERAL_GRINDEL_ROLL);
-        spawn_mist_particles();
+        PlaySound2(SOUND_GENERAL_GRINDEL_ROLL);
+        func_802A3004();
     }
 
     if (o->oForwardVel > 70.0)
@@ -27,7 +27,7 @@ void boulder_act_1(void) {
 }
 
 void bhv_big_boulder_loop(void) {
-    cur_obj_scale(1.5f);
+    obj_scale(1.5f);
     o->oGraphYOffset = 270.0f;
     switch (o->oAction) {
         case 0:
@@ -36,13 +36,13 @@ void bhv_big_boulder_loop(void) {
             break;
 
         case 1:
-            boulder_act_1();
-            adjust_rolling_face_pitch(1.5f);
-            cur_obj_play_sound_1(SOUND_ENV_UNKNOWN2);
+            func_802F05DC();
+            func_802EFB84(1.5f);
+            PlaySound(SOUND_ENV_UNKNOWN2);
             break;
     }
 
-    set_rolling_sphere_hitbox();
+    func_802EFB2C();
 }
 
 void bhv_big_boulder_generator_loop(void) {
@@ -57,12 +57,12 @@ void bhv_big_boulder_generator_loop(void) {
     if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 6000)) {
         if ((o->oTimer & 0x3F) == 0) {
             sp1C = spawn_object(o, MODEL_HMC_ROLLING_ROCK, bhvBigBoulder);
-            sp1C->oMoveAngleYaw = random_float() * 4096.0f;
+            sp1C->oMoveAngleYaw = RandomFloat() * 4096.0f;
         }
     } else {
         if ((o->oTimer & 0x7F) == 0) {
             sp1C = spawn_object(o, MODEL_HMC_ROLLING_ROCK, bhvBigBoulder);
-            sp1C->oMoveAngleYaw = random_float() * 4096.0f;
+            sp1C->oMoveAngleYaw = RandomFloat() * 4096.0f;
         }
     }
 }

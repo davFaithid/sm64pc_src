@@ -23,7 +23,7 @@ void bhv_water_level_diamond_loop(void) {
                     o->oAction++; // Sets to WATER_LEVEL_DIAMOND_ACT_IDLE
                 break;
             case WATER_LEVEL_DIAMOND_ACT_IDLE:
-                if (obj_check_if_collided_with_object(o, gMarioObject)) {
+                if (are_objects_collided(o, gMarioObject)) {
                     if (gWDWWaterLevelChanging == 0) {
                         o->oAction++; // Sets to WATER_LEVEL_DIAMOND_ACT_CHANGE_WATER_LEVEL
                         gWDWWaterLevelChanging = 1;
@@ -41,21 +41,18 @@ void bhv_water_level_diamond_loop(void) {
                         o->oAngleVelYaw = 0x800;
                 } else {
                     if (o->oTimer == 0)
-                        cur_obj_play_sound_2(SOUND_GENERAL_WATER_LEVEL_TRIG);
+                        PlaySound2(SOUND_GENERAL_WATER_LEVEL_TRIG);
                     else {
                         if (*gEnvironmentLevels > o->oWaterLevelTriggerTargetWaterLevel)
-                            cur_obj_play_sound_1(SOUND_ENV_WATER_DRAIN);
+                            PlaySound(SOUND_ENV_WATER_DRAIN);
                         else
-                            cur_obj_play_sound_1(SOUND_ENV_WATER_DRAIN); // same as above
+                            PlaySound(SOUND_ENV_WATER_DRAIN); // same as above
                     }
                     o->oAngleVelYaw = 0x800;
-#ifdef VERSION_SH
-                    reset_rumble_timers_2(2);
-#endif
                 }
                 break;
             case WATER_LEVEL_DIAMOND_ACT_IDLE_SPINNING:
-                if (!obj_check_if_collided_with_object(o, gMarioObject)) {
+                if (!are_objects_collided(o, gMarioObject)) {
                     gWDWWaterLevelChanging = 0;
                     o->oAction = WATER_LEVEL_DIAMOND_ACT_IDLE;
                     o->oAngleVelYaw = 0;

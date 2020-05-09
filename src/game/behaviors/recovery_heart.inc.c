@@ -12,10 +12,10 @@ struct ObjectHitbox sRecoveryHeartHitbox = {
 };
 
 void bhv_recovery_heart_loop(void) {
-    obj_set_hitbox(o, &sRecoveryHeartHitbox);
-    if (obj_check_if_collided_with_object(o, gMarioObject)) {
+    set_object_hitbox(o, &sRecoveryHeartHitbox);
+    if (are_objects_collided(o, gMarioObject)) {
         if (o->oSpinningHeartPlayedSound == 0) {
-            cur_obj_play_sound_2(SOUND_GENERAL_HEART_SPIN);
+            PlaySound2(SOUND_GENERAL_HEART_SPIN);
             o->oSpinningHeartPlayedSound += 1;
         }
 

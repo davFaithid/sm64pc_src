@@ -13,6 +13,7 @@
 #include "surface_collision.h"
 #include "game/mario.h"
 #include "game/object_list_processor.h"
+#include "game/room.h"
 #include "surface_load.h"
 
 s32 unused8038BE90;
@@ -103,10 +104,6 @@ static void clear_static_surfaces(void) {
 
 /**
  * Add a surface to the correct cell list of surfaces.
- * @param dynamic Determines whether the surface is static or dynamic
- * @param cellX The X position of the cell in which the surface resides
- * @param cellZ The Z position of the cell in which the surface resides
- * @param surface The surface to add
  */
 static void add_surface_to_cell(s16 dynamic, s16 cellX, s16 cellZ, struct Surface *surface) {
     struct SurfaceNode *newNode = alloc_surface_node();
@@ -195,24 +192,23 @@ static s16 max_3(s16 a0, s16 a1, s16 a2) {
 /**
  * Every level is split into 16 * 16 cells of surfaces (to limit computing
  * time). This function determines the lower cell for a given x/z position.
- * @param coord The coordinate to test
  */
-static s16 lower_cell_index(s16 coord) {
+static s16 lower_cell_index(s16 t) {
     s16 index;
 
     // Move from range [-0x2000, 0x2000) to [0, 0x4000)
-    coord += 0x2000;
-    if (coord < 0) {
-        coord = 0;
+    t += 0x2000;
+    if (t < 0) {
+        t = 0;
     }
 
     // [0, 16)
-    index = coord / 0x400;
+    index = t / 0x400;
 
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
-    if (coord % 0x400 < 50) {
+    if (t % 0x400 < 50) {
         index -= 1;
     }
 
@@ -227,24 +223,23 @@ static s16 lower_cell_index(s16 coord) {
 /**
  * Every level is split into 16 * 16 cells of surfaces (to limit computing
  * time). This function determines the upper cell for a given x/z position.
- * @param coord The coordinate to test
  */
-static s16 upper_cell_index(s16 coord) {
+static s16 upper_cell_index(s16 t) {
     s16 index;
 
     // Move from range [-0x2000, 0x2000) to [0, 0x4000)
-    coord += 0x2000;
-    if (coord < 0) {
-        coord = 0;
+    t += 0x2000;
+    if (t < 0) {
+        t = 0;
     }
 
     // [0, 16)
-    index = coord / 0x400;
+    index = t / 0x400;
 
     // Include extra cell if close to boundary
     //! Some wall checks are larger than the buffer, meaning wall checks can
     //  miss walls that are near a cell border.
-    if (coord % 0x400 > 0x400 - 50) {
+    if (t % 0x400 > 0x400 - 50) {
         index += 1;
     }
 
@@ -260,8 +255,6 @@ static s16 upper_cell_index(s16 coord) {
  * Every level is split into 16x16 cells, this takes a surface, finds
  * the appropriate cells (with a buffer), and adds the surface to those
  * cells.
- * @param surface The surface to check
- * @param dynamic Boolean determining whether the surface is static or dynamic
  */
 static void add_surface(struct Surface *surface, s32 dynamic) {
     // minY/maxY maybe? s32 instead of s16, though.
@@ -291,13 +284,12 @@ static void add_surface(struct Surface *surface, s32 dynamic) {
     }
 }
 
-static void stub_surface_load_1(void) {
+static void unused_80382B6C(void) {
 }
 
 /**
- * Initializes a Surface struct using the given vertex data
- * @param vertexData The raw data containing vertex positions
- * @param vertexIndices Helper which tells positions in vertexData to start reading vertices
+ * Initialize a surface from reading it's data and putting it into a surface
+ * stuct.
  */
 static struct Surface *read_surface_data(s16 *vertexData, s16 **vertexIndices) {
     struct Surface *surface;
@@ -533,6 +525,57 @@ void alloc_surface_pools(void) {
     reset_red_coins_collected();
 }
 
+#ifndef TARGET_N64
+/**
+ * Get the size of the terrain data, to get the correct size when copying later.
+ */
+u32 get_area_terrain_size(s16 *data) {
+    s16 *startPos = data;
+    s32 end = FALSE;
+    s16 terrainLoadType;
+    s32 numVertices;
+    s32 numRegions;
+    s32 numSurfaces;
+    s16 hasForce;
+
+    while (!end) {
+        terrainLoadType = *data++;
+
+        switch (terrainLoadType) {
+            case TERRAIN_LOAD_VERTICES:
+                numVertices = *data++;
+                data += 3 * numVertices;
+                break;
+
+            case TERRAIN_LOAD_OBJECTS:
+                data += get_special_objects_size(data);
+                break;
+
+            case TERRAIN_LOAD_ENVIRONMENT:
+                numRegions = *data++;
+                data += 6 * numRegions;
+                break;
+
+            case TERRAIN_LOAD_CONTINUE:
+                continue;
+
+            case TERRAIN_LOAD_END:
+                end = TRUE;
+                break;
+
+            default:
+                numSurfaces = *data++;
+                hasForce = surface_has_force(terrainLoadType);
+                data += (3 + hasForce) * numSurfaces;
+                break;
+        }
+    }
+
+    return data - startPos;
+}
+#endif
+
+
 /**
  * Process the level file, loading in vertices, surfaces, some objects, and environmental
  * boxes (water, gas, JRB fog).
@@ -609,13 +652,17 @@ static void unused_80383604(void) {
 /**
  * Applies an object's tranformation to the object's vertices.
  */
-void transform_object_vertices(s16 **data, s16 *vertexData) {
+static void transform_object_vertices(s16 **data, s16 *vertexData) {
     register s16 *vertices;
-    register f32 vx, vy, vz;
     register s32 numVertices;
+
+    register f32 vx;
+    register f32 vy;
+    register f32 vz;
 
     Mat4 *objectTransform;
     Mat4 m;
+    UNUSED s16 unused;
 
     objectTransform = &gCurrentObject->transform;
 
@@ -626,10 +673,10 @@ void transform_object_vertices(s16 **data, s16 *vertexData) {
 
     if (gCurrentObject->header.gfx.throwMatrix == NULL) {
         gCurrentObject->header.gfx.throwMatrix = objectTransform;
-        obj_build_transform_from_pos_and_angle(gCurrentObject, O_POS_INDEX, O_FACE_ANGLE_INDEX);
+        build_object_transform_from_pos_and_angle(gCurrentObject, O_POS_INDEX, O_FACE_ANGLE_INDEX);
     }
 
-    obj_apply_scale_to_matrix(gCurrentObject, m, *objectTransform);
+    apply_object_scale_to_matrix(gCurrentObject, m, *objectTransform);
 
     // Go through all vertices, rotating and translating them to transform the object.
     while (numVertices--) {
@@ -650,7 +697,7 @@ void transform_object_vertices(s16 **data, s16 *vertexData) {
  * Load in the surfaces for the gCurrentObject. This includes setting the flags,
  * exertion, and room.
  */
-void load_object_surfaces(s16 **data, s16 *vertexData) {
+static void load_object_surfaces(s16 **data, s16 *vertexData) {
     s32 surfaceType;
     s32 i;
     s32 numSurfaces;

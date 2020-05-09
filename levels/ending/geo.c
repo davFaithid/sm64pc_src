@@ -9,8 +9,6 @@
 #include "game/screen_transition.h"
 #include "game/paintings.h"
 
-#include "make_const_nonconst.h"
-
 #include "levels/ending/header.h"
 
 // 0x0E000050
@@ -21,9 +19,6 @@ const GeoLayout ending_geo_000050[] = {
       GEO_OPEN_NODE(),
          GEO_NODE_ORTHO(100),
          GEO_OPEN_NODE(),
-#ifdef VERSION_EU
-            GEO_BACKGROUND_COLOR(0x0001),
-#endif
             GEO_ASM(0, geo_exec_cake_end_screen),
          GEO_CLOSE_NODE(),
       GEO_CLOSE_NODE(),

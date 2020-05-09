@@ -2,8 +2,10 @@
 
 #include "area.h"
 #include "sm64.h"
+#include "gfx_dimensions.h"
 #include "behavior_data.h"
-#include "game_init.h"
+#include "game.h"
+#include "display.h"
 #include "object_list_processor.h"
 #include "engine/surface_load.h"
 #include "ingame_menu.h"
@@ -18,7 +20,8 @@
 #include "level_update.h"
 #include "engine/geo_layout.h"
 #include "save_file.h"
-#include "level_table.h"
+
+#include "gfx_dimensions.h"
 
 struct SpawnInfo gPlayerSpawnInfos[1];
 struct GraphNode *D_8033A160[0x100];
@@ -47,30 +50,19 @@ u8 gWarpTransRed = 0;
 u8 gWarpTransGreen = 0;
 u8 gWarpTransBlue = 0;
 s16 gCurrSaveFileNum = 1;
-s16 gCurrLevelNum = LEVEL_MIN;
+s16 gCurrLevelNum = 1;
 
-/* 
- * The following two tables are used in get_mario_spawn_type() to determine spawn type
- * from warp behavior.
- * When looping through sWarpBhvSpawnTable, if the behavior function in the table matches
- * the spawn behavior executed, the index of that behavior is used with sSpawnTypeFromWarpBhv
-*/
-
-// D_8032CE9C
-const BehaviorScript *sWarpBhvSpawnTable[] = {
-    bhvDoorWarp, bhvStar,       bhvExitPodiumWarp, bhvWarp,
-    bhvWarpPipe, bhvFadingWarp, bhvWarps60,        bhvWarps64,
-    bhvWarps68,  bhvWarps6C,    bhvDeathWarp,      bhvWarps74,
-    bhvWarps78,  bhvWarps94,    bhvWarps7C,        bhvPaintingDeathWarp,
-    bhvWarps88,  bhvWarps84,    bhvWarps8C,        bhvWarps90,
+const BehaviorScript *D_8032CE9C[] = {
+    bhvDoorWarp, bhvStar,    bhvExitPodiumWarp, bhvWarp,    bhvWarpPipe, bhvFadingWarp, bhvWarps60,
+    bhvWarps64,  bhvWarps68, bhvWarps6C,        bhvWarps70, bhvWarps74,  bhvWarps78,    bhvWarps94,
+    bhvWarps7C,  bhvWarps80, bhvWarps88,        bhvWarps84, bhvWarps8C,  bhvWarps90,
 };
 
-// D_8032CEEC
-u8 sSpawnTypeFromWarpBhv[] = {
+u8 D_8032CEEC[] = {
     MARIO_SPAWN_UNKNOWN_01, MARIO_SPAWN_UNKNOWN_02, MARIO_SPAWN_UNKNOWN_03, MARIO_SPAWN_UNKNOWN_03,
     MARIO_SPAWN_UNKNOWN_03, MARIO_SPAWN_UNKNOWN_04, MARIO_SPAWN_UNKNOWN_10, MARIO_SPAWN_UNKNOWN_12,
-    MARIO_SPAWN_UNKNOWN_13, MARIO_SPAWN_UNKNOWN_14, MARIO_SPAWN_DEATH,      MARIO_SPAWN_UNKNOWN_16,
-    MARIO_SPAWN_UNKNOWN_17, MARIO_SPAWN_UNKNOWN_11, MARIO_SPAWN_UNKNOWN_20, MARIO_SPAWN_PAINTING_DEATH,
+    MARIO_SPAWN_UNKNOWN_13, MARIO_SPAWN_UNKNOWN_14, MARIO_SPAWN_UNKNOWN_15, MARIO_SPAWN_UNKNOWN_16,
+    MARIO_SPAWN_UNKNOWN_17, MARIO_SPAWN_UNKNOWN_11, MARIO_SPAWN_UNKNOWN_20, MARIO_SPAWN_UNKNOWN_21,
     MARIO_SPAWN_UNKNOWN_22, MARIO_SPAWN_UNKNOWN_23, MARIO_SPAWN_UNKNOWN_24, MARIO_SPAWN_UNKNOWN_25,
 };
 
@@ -87,7 +79,7 @@ const char *gNoControllerMsg[] = {
 };
 #endif
 
-void override_viewport_and_clip(Vp *a, Vp *b, u8 c, u8 d, u8 e) {
+void func_8027A220(Vp *a, Vp *b, u8 c, u8 d, u8 e) {
     u16 sp6 = ((c >> 3) << 11) | ((d >> 3) << 6) | ((e >> 3) << 1) | 1;
 
     gFBSetColor = (sp6 << 16) | sp6;
@@ -104,6 +96,11 @@ void set_warp_transition_rgb(u8 red, u8 green, u8 blue) {
     gWarpTransBlue = blue;
 }
 
+static int scale_x_to_correct_aspect_center(int x) {
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+    return x + (SCREEN_HEIGHT * aspect / 2) - (SCREEN_WIDTH / 2);
+}
+
 void print_intro_text(void) {
 #ifdef VERSION_EU
     int language = eu_get_language();
@@ -111,13 +108,13 @@ void print_intro_text(void) {
     if ((gGlobalTimer & 0x1F) < 20) {
         if (gControllerBits == 0) {
 #ifdef VERSION_EU
-            print_text_centered(160, 20, gNoControllerMsg[language]);
+            print_text_centered(SCREEN_WIDTH / 2, 20, gNoControllerMsg[language]);
 #else
-            print_text_centered(160, 20, "NO CONTROLLER");
+            print_text_centered(scale_x_to_correct_aspect_center(SCREEN_WIDTH / 2), 20, "NO CONTROLLER");
 #endif
         } else {
 #ifdef VERSION_EU
-            print_text(20, 20, "START");
+            print_text_centered(20, 20, "START");
 #else
             print_text_centered(60, 38, "PRESS");
             print_text_centered(60, 20, "START");
@@ -126,13 +123,29 @@ void print_intro_text(void) {
     }
 }
 
+void print_intro_text2(void)
+{
+    if (gControllerBits == 0)
+    {
+        print_text_centered(160, 20, "NO CONTROLLER");
+    }
+    else
+    {
+        print_text_centered(160, 164, "SUPER MARIO 64 PC");
+        print_text_centered(160, 128, "ORIGINAL GAME");
+        print_text_centered(160, 110, "BY NINTENDO");
+        print_text_centered(160, 38, "PRESS START");
+        print_text_centered(160, 20, "COPYRIGHT 1996");
+    }
+}
+
 u32 get_mario_spawn_type(struct Object *o) {
     s32 i;
     const BehaviorScript *behavior = virtual_to_segmented(0x13, o->behavior);
 
     for (i = 0; i < 20; i++) {
-        if (sWarpBhvSpawnTable[i] == behavior) {
-            return sSpawnTypeFromWarpBhv[i];
+        if (D_8032CE9C[i] == behavior) {
+            return D_8032CEEC[i];
         }
     }
     return 0;
@@ -149,13 +162,13 @@ struct ObjectWarpNode *area_get_warp_node(u8 id) {
     return node;
 }
 
-struct ObjectWarpNode *area_get_warp_node_from_params(struct Object *o) {
+struct ObjectWarpNode *func_8027A478(struct Object *o) {
     u8 sp1F = (o->oBehParams & 0x00FF0000) >> 16;
 
     return area_get_warp_node(sp1F);
 }
 
-void load_obj_warp_nodes(void) {
+void func_8027A4C4(void) {
     struct ObjectWarpNode *sp24;
     struct Object *sp20 = (struct Object *) gObjParentGraphNode.children;
 
@@ -163,7 +176,7 @@ void load_obj_warp_nodes(void) {
         struct Object *sp1C = sp20;
 
         if (sp1C->activeFlags && get_mario_spawn_type(sp1C) != 0) {
-            sp24 = area_get_warp_node_from_params(sp1C);
+            sp24 = func_8027A478(sp1C);
             if (sp24 != NULL) {
                 sp24->object = sp1C;
             }
@@ -203,7 +216,7 @@ void clear_areas(void) {
     }
 }
 
-void clear_area_graph_nodes(void) {
+void func_8027A7C4(void) {
     s32 i;
 
     if (gCurrentArea != NULL) {
@@ -234,12 +247,12 @@ void load_area(s32 index) {
             spawn_objects_from_info(0, gCurrentArea->objectSpawnInfos);
         }
 
-        load_obj_warp_nodes();
+        func_8027A4C4();
         geo_call_global_function_nodes(gCurrentArea->unk04, GEO_CONTEXT_AREA_LOAD);
     }
 }
 
-void unload_area(void) {
+void func_8027A998(void) {
     if (gCurrentArea != NULL) {
         unload_objects_from_area(0, gCurrentArea->index);
         geo_call_global_function_nodes(gCurrentArea->unk04, GEO_CONTEXT_AREA_UNLOAD);
@@ -260,13 +273,13 @@ void load_mario_area(void) {
     }
 }
 
-void unload_mario_area(void) {
+void func_8027AA88(void) {
     if (gCurrentArea != NULL && (gCurrentArea->flags & 0x01)) {
         unload_objects_from_area(0, gMarioSpawnInfo->activeAreaIndex);
 
         gCurrentArea->flags &= ~0x01;
         if (gCurrentArea->flags == 0) {
-            unload_area();
+            func_8027A998();
         }
     }
 }
@@ -275,7 +288,7 @@ void change_area(s32 index) {
     s32 areaFlags = gCurrentArea->flags;
 
     if (gCurrAreaIndex != index) {
-        unload_area();
+        func_8027A998();
         load_area(index);
 
         gCurrentArea->flags = areaFlags;

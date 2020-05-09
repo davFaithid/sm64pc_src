@@ -99,7 +99,9 @@ void _Ldtob(printf_struct *args, u8 type) {
             if (exp > 0) {
                 factor = 1;
                 exp &= ~3;
-                for (n = exp, i = 0; n > 0; n >>= 1, i++) {
+                n = exp;
+
+                for (i = 0; n > 0; n >>= 1, i++) {
                     if ((n & 1) != 0) {
                         factor *= D_80338670[i];
                     }

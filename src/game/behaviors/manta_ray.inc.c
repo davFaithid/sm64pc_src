@@ -22,17 +22,17 @@ void bhv_manta_ray_init(void) {
     struct Object *sp1C;
     sp1C = spawn_object(o, MODEL_NONE, bhvMantaRayRingManager);
     o->parentObj = sp1C;
-    obj_set_hitbox(o, &sMantaRayHitbox);
-    cur_obj_scale(2.5f);
+    set_object_hitbox(o, &sMantaRayHitbox);
+    obj_scale(2.5f);
 }
 
-void manta_ray_move(void) {
+void func_802F5E20(void) {
     s16 sp1E;
     s32 sp18;
 
     sp1E = o->header.gfx.unk38.animFrame;
     gCurrentObject->oPathedWaypointsS16 = &D_803316A8;
-    sp18 = cur_obj_follow_path(sp18);
+    sp18 = obj_follow_path(sp18);
     o->oMantaUnkF8 = o->oPathedTargetYaw;
     o->oMantaUnkF4 = o->oPathedTargetPitch;
     o->oForwardVel = 10.0f;
@@ -48,12 +48,12 @@ void manta_ray_move(void) {
             o->oMoveAngleRoll = 0x4000 / 3;
     }
 
-    cur_obj_set_pos_via_transform();
+    func_802A2A38();
     if (sp1E == 0)
-        cur_obj_play_sound_2(SOUND_GENERAL_MOVING_WATER);
+        PlaySound2(SOUND_GENERAL_MOVING_WATER);
 }
 
-void manta_ray_act_spawn_ring(void) {
+void func_802F5FD8(void) {
     struct Object *sp1C = o->parentObj;
     struct Object *sp18;
 
@@ -78,17 +78,17 @@ void manta_ray_act_spawn_ring(void) {
 void bhv_manta_ray_loop(void) {
     switch (o->oAction) {
         case 0:
-            manta_ray_move();
-            manta_ray_act_spawn_ring();
+            func_802F5E20();
+            func_802F5FD8();
             if (o->oMantaUnk1AC == 5) {
-                spawn_mist_particles();
-                spawn_default_star(-3180.0f, -3600.0f, 120.0f);
+                func_802A3004();
+                create_star(-3180.0f, -3600.0f, 120.0f);
                 o->oAction = 1;
             }
             break;
 
         case 1:
-            manta_ray_move();
+            func_802F5E20();
             break;
     }
 

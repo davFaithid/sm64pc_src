@@ -69,7 +69,7 @@ void bhv_wiggler_body_part_update(void) {
     struct ChainSegment *segment = &o->parentObj->oWigglerSegments[o->oBehParams2ndByte];
     f32 posOffset;
 
-    cur_obj_scale(o->parentObj->header.gfx.scale[0]);
+    obj_scale(o->parentObj->header.gfx.scale[0]);
 
     o->oFaceAnglePitch = segment->pitch;
     o->oFaceAngleYaw = segment->yaw;
@@ -90,7 +90,7 @@ void bhv_wiggler_body_part_update(void) {
         //  while on the ground could cause the tail segments to clip through
         //  the floor
         o->oPosY += -30.0f;
-        cur_obj_update_floor_height();
+        obj_update_floor_height();
         if (o->oFloorHeight > o->oPosY) // TODO: Check ineq swap
         {
             o->oPosY = o->oFloorHeight;
@@ -100,13 +100,13 @@ void bhv_wiggler_body_part_update(void) {
     segment->posY = o->oPosY;
 
     // Inherit walking animation speed from wiggler
-    cur_obj_init_animation_with_accel_and_sound(0, o->parentObj->oWigglerWalkAnimSpeed);
+    func_8029ED98(0, o->parentObj->oWigglerWalkAnimSpeed);
     if (o->parentObj->oWigglerWalkAnimSpeed == 0.0f) {
-        cur_obj_reverse_animation();
+        func_8029F6F0();
     }
 
     if (o->parentObj->oAction == WIGGLER_ACT_SHRINK) {
-        cur_obj_become_intangible();
+        obj_become_intangible();
     } else {
         obj_check_attacks(&sWigglerBodyPartHitbox, o->oAction);
     }
@@ -115,7 +115,7 @@ void bhv_wiggler_body_part_update(void) {
 /**
  * Initialize the segment data and spawn the body part objects.
  */
-void wiggler_init_segments(void) {
+static void wiggler_init_segments(void) {
     s32 i;
     struct ChainSegment *segments;
     struct Object *bodyPart;
@@ -127,14 +127,14 @@ void wiggler_init_segments(void) {
         // represents body part i.
         o->oWigglerSegments = segments;
         for (i = 0; i <= 3; i++) {
-            chain_segment_init(segments + i);
+            chain_segment_init(&segments[i]);
 
-            (segments + i)->posX = o->oPosX;
-            (segments + i)->posY = o->oPosY;
-            (segments + i)->posZ = o->oPosZ;
+            segments[i].posX = o->oPosX;
+            segments[i].posY = o->oPosY;
+            segments[i].posZ = o->oPosZ;
 
-            (segments + i)->pitch = o->oFaceAnglePitch;
-            (segments + i)->yaw = o->oFaceAngleYaw;
+            segments[i].pitch = o->oFaceAnglePitch;
+            segments[i].yaw = o->oFaceAngleYaw;
         }
 
         o->header.gfx.unk38.animFrame = -1;
@@ -144,18 +144,14 @@ void wiggler_init_segments(void) {
             bodyPart =
                 spawn_object_relative(i, 0, 0, 0, o, MODEL_WIGGLER_BODY, bhvWigglerBody);
             if (bodyPart != NULL) {
-                obj_init_animation_with_sound(bodyPart, wiggler_seg5_anims_0500C874, 0);
+                func_8029EE20(bodyPart, wiggler_seg5_anims_0500C874, 0);
                 bodyPart->header.gfx.unk38.animFrame = (23 * i) % 26 - 1;
             }
         }
 
         o->oAction = WIGGLER_ACT_WALK;
-        cur_obj_unhide();
+        obj_unhide();
     }
-
-#if defined(VERSION_EU) || defined(AVOID_UB)
-    o->oHealth = 4; // This fixes Wiggler reading UB on his first frame of his acceleration, as his health is not set.
-#endif
 }
 
 /**
@@ -165,7 +161,7 @@ void wiggler_init_segments(void) {
  * for a body part to get stuck on geometry and separate from the rest of the
  * body.
  */
- void wiggler_update_segments(void) {
+static void wiggler_update_segments(void) {
     struct ChainSegment *prevBodyPart;
     struct ChainSegment *bodyPart;
     f32 dx;
@@ -222,20 +218,20 @@ static void wiggler_act_walk(void) {
     // Update text if necessary
     if (o->oWigglerTextStatus < WIGGLER_TEXT_STATUS_COMPLETED_DIALOG) {
         if (o->oWigglerTextStatus == WIGGLER_TEXT_STATUS_AWAIT_DIALOG) {
-            func_8031FFB4(SEQ_PLAYER_LEVEL, 60, 40);
+            func_8031FFB4(0, 60, 40);
             o->oWigglerTextStatus = WIGGLER_TEXT_STATUS_SHOWING_DIALOG;
         }
 
         // If Mario is positioned below the wiggler, assume he entered through the
         // lower cave entrance, so don't display text.
-        if (gMarioObject->oPosY < o->oPosY || cur_obj_update_dialog_with_cutscene(2, 0, CUTSCENE_DIALOG, DIALOG_150) != 0) {
+        if (gMarioObject->oPosY < o->oPosY || obj_update_dialog_with_cutscene(2, 0, CUTSCENE_DIALOG, DIALOG_150) != 0) {
             o->oWigglerTextStatus = WIGGLER_TEXT_STATUS_COMPLETED_DIALOG;
         }
     } else {
         //! Every object's health is initially 2048, and wiggler's doesn't change
         //  to 4 until after this runs the first time. It indexes out of bounds
-        //  and uses the value 113762.3 for one frame on US. This is fixed up
-        //  in wiggler_init_segments if AVOID_UB is defined.
+        //  and uses the value 113762.3 for one frame on US. This is fixed down
+        //  below in bhv_wiggler_update if AVOID_UB is defined.
         obj_forward_vel_approach(sWigglerSpeeds[o->oHealth - 1], 1.0f);
 
         if (o->oWigglerWalkAwayFromWallTimer != 0) {
@@ -257,7 +253,7 @@ static void wiggler_act_walk(void) {
                 } else if (o->oWigglerTimeUntilRandomTurn != 0) {
                     o->oWigglerTimeUntilRandomTurn -= 1;
                 } else {
-                    o->oWigglerTargetYaw = o->oMoveAngleYaw + 0x4000 * (s16) random_sign();
+                    o->oWigglerTargetYaw = o->oMoveAngleYaw + 0x4000 * (s16) RandomSign();
                     o->oWigglerTimeUntilRandomTurn = random_linear_offset(30, 50);
                 }
             }
@@ -266,7 +262,7 @@ static void wiggler_act_walk(void) {
         // If moving at high speeds, could overflow. But can't reach such speeds
         // in practice
         yawTurnSpeed = (s16)(30.0f * o->oForwardVel);
-        cur_obj_rotate_yaw_toward(o->oWigglerTargetYaw, yawTurnSpeed);
+        obj_rotate_yaw_toward(o->oWigglerTargetYaw, yawTurnSpeed);
         obj_face_yaw_approach(o->oMoveAngleYaw, 2 * yawTurnSpeed);
 
         obj_face_pitch_approach(0, 0x320);
@@ -284,6 +280,7 @@ static void wiggler_act_walk(void) {
         }
     }
 }
+
 /**
  * Squish and unsquish, then show text and enter either the walking or shrinking
  * action.
@@ -304,18 +301,18 @@ static void wiggler_act_jumped_on(void) {
     // defeated) or go back to walking
     if (o->header.gfx.scale[1] >= 4.0f) {
         if (o->oTimer > 30) {
-            if (cur_obj_update_dialog_with_cutscene(2, 0, CUTSCENE_DIALOG, attackText[o->oHealth - 2]) != 0) {
+            if (obj_update_dialog_with_cutscene(2, 0, CUTSCENE_DIALOG, attackText[o->oHealth - 2]) != 0) {
                 // Because we don't want the wiggler to disappear after being
                 // defeated, we leave its health at 1
                 if (--o->oHealth == 1) {
                     o->oAction = WIGGLER_ACT_SHRINK;
-                    cur_obj_become_intangible();
+                    obj_become_intangible();
                 } else {
                     o->oAction = WIGGLER_ACT_WALK;
                     o->oMoveAngleYaw = o->oFaceAngleYaw;
 
                     if (o->oHealth == 2) {
-                        cur_obj_play_sound_2(SOUND_OBJ_WIGGLER_JUMP);
+                        PlaySound2(SOUND_OBJ_WIGGLER_JUMP);
                         o->oForwardVel = 10.0f;
                         o->oVelY = 70.0f;
                     }
@@ -353,16 +350,16 @@ static void wiggler_act_knockback(void) {
 static void wiggler_act_shrink(void) {
     if (o->oTimer >= 20) {
         if (o->oTimer == 20) {
-            cur_obj_play_sound_2(SOUND_OBJ_ENEMY_DEFEAT_SHRINK);
+            PlaySound2(SOUND_OBJ_ENEMY_DEFEAT_SHRINK);
         }
 
         // 4 is the default scale, so shrink to 1/4 of regular size
         if (approach_f32_ptr(&o->header.gfx.scale[0], 1.0f, 0.1f)) {
-            spawn_default_star(0.0f, 2048.0f, 0.0f);
+            create_star(0.0f, 2048.0f, 0.0f);
             o->oAction = WIGGLER_ACT_FALL_THROUGH_FLOOR;
         }
 
-        cur_obj_scale(o->header.gfx.scale[0]);
+        obj_scale(o->header.gfx.scale[0]);
     }
 }
 
@@ -380,7 +377,7 @@ static void wiggler_act_fall_through_floor(void) {
             o->oFaceAnglePitch = obj_get_pitch_from_vel();
         }
 
-        cur_obj_move_using_fvel_and_gravity();
+        obj_move_using_fvel_and_gravity();
     }
 }
 
@@ -389,7 +386,7 @@ static void wiggler_act_fall_through_floor(void) {
  * Stop and enter the jumped on action.
  */
 void wiggler_jumped_on_attack_handler(void) {
-    cur_obj_play_sound_2(SOUND_OBJ_WIGGLER_ATTACKED);
+    PlaySound2(SOUND_OBJ_WIGGLER_ATTACKED);
     o->oAction = WIGGLER_ACT_JUMPED_ON;
     o->oForwardVel = o->oVelY = 0.0f;
     o->oWigglerSquishSpeed = 0.4f;
@@ -402,6 +399,10 @@ void bhv_wiggler_update(void) {
     // PARTIAL_UPDATE
 
     if (o->oAction == WIGGLER_ACT_UNINITIALIZED) {
+#ifdef AVOID_UB
+        // See comment in wiggler_act_walk
+        o->oHealth = 4;
+#endif
         wiggler_init_segments();
     } else {
         if (o->oAction == WIGGLER_ACT_FALL_THROUGH_FLOOR) {
@@ -410,15 +411,15 @@ void bhv_wiggler_update(void) {
             treat_far_home_as_mario(1200.0f);
 
             // Walking animation and sound
-            cur_obj_init_animation_with_accel_and_sound(0, o->oWigglerWalkAnimSpeed);
+            func_8029ED98(0, o->oWigglerWalkAnimSpeed);
             if (o->oWigglerWalkAnimSpeed != 0.0f) {
-                cur_obj_play_sound_at_anim_range(0, 13,
+                func_802F9378(0, 13,
                               o->oHealth >= 4 ? SOUND_OBJ_WIGGLER_LOW_PITCH : SOUND_OBJ_WIGGLER_HIGH_PITCH);
             } else {
-                cur_obj_reverse_animation();
+                func_8029F6F0();
             }
 
-            cur_obj_update_floor_and_walls();
+            obj_update_floor_and_walls();
             switch (o->oAction) {
                 case WIGGLER_ACT_WALK:
                     wiggler_act_walk();
@@ -437,7 +438,7 @@ void bhv_wiggler_update(void) {
                     break;
             }
 
-            cur_obj_move_standard(-78);
+            obj_move_standard(-78);
         }
 
         // Update segment 0 with data from the wiggler object

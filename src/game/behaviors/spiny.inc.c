@@ -47,7 +47,7 @@ static s32 spiny_check_active(void) {
             //  It can also be used on a bob-omb respawner to change its model
             //  to a butterfly or fish.
             o->parentObj->oEnemyLakituNumSpinies -= 1;
-            obj_mark_for_deletion(o);
+            mark_object_for_deletion(o);
             return FALSE;
         }
     }
@@ -60,10 +60,10 @@ static s32 spiny_check_active(void) {
  */
 static void spiny_act_walk(void) {
     if (spiny_check_active()) {
-        cur_obj_update_floor_and_walls();
+        obj_update_floor_and_walls();
 
         o->oGraphYOffset = -17.0f;
-        cur_obj_init_animation_with_sound(0);
+        set_obj_animation_and_sound_state(0);
 
         if (o->oMoveFlags & OBJ_MOVE_MASK_ON_GROUND) {
             // After touching the ground for the first time, stop. From now on,
@@ -87,20 +87,20 @@ static void spiny_act_walk(void) {
                     if (o->oSpinyTimeUntilTurn != 0) {
                         o->oSpinyTimeUntilTurn -= 1;
                     } else {
-                        o->oSpinyTargetYaw = o->oMoveAngleYaw + (s16) random_sign() * 0x2000;
+                        o->oSpinyTargetYaw = o->oMoveAngleYaw + (s16) RandomSign() * 0x2000;
                         o->oSpinyTimeUntilTurn = random_linear_offset(100, 100);
                     }
                 }
 
-                cur_obj_rotate_yaw_toward(o->oSpinyTargetYaw, 0x80);
+                obj_rotate_yaw_toward(o->oSpinyTargetYaw, 0x80);
             }
 
         } else if (o->oMoveFlags & OBJ_MOVE_HIT_WALL) {
             // Bounce off walls while falling
-            o->oMoveAngleYaw = cur_obj_reflect_move_angle_off_wall();
+            o->oMoveAngleYaw = obj_reflect_move_angle_off_wall();
         }
 
-        cur_obj_move_standard(-78);
+        obj_move_standard(-78);
 
         if (obj_handle_attacks(&sSpinyHitbox, SPINY_ACT_ATTACKED_MARIO, sSpinyWalkAttackHandlers)) {
             // When attacked by mario, lessen the knockback
@@ -124,7 +124,7 @@ static void spiny_act_walk(void) {
  */
 static void spiny_act_held_by_lakitu(void) {
     o->oGraphYOffset = 15.0f;
-    cur_obj_init_animation_with_sound(0);
+    set_obj_animation_and_sound_state(0);
 
     o->oParentRelativePosX = -50.0f;
     o->oParentRelativePosY = 35.0f;
@@ -148,26 +148,26 @@ static void spiny_act_held_by_lakitu(void) {
  */
 static void spiny_act_thrown_by_lakitu(void) {
     if (spiny_check_active()) {
-        cur_obj_update_floor_and_walls();
+        obj_update_floor_and_walls();
 
         o->oGraphYOffset = 15.0f;
         o->oFaceAnglePitch -= 0x2000;
 
-        cur_obj_init_animation_with_sound(0);
+        set_obj_animation_and_sound_state(0);
 
         if (o->oMoveFlags & OBJ_MOVE_LANDED) {
-            cur_obj_play_sound_2(SOUND_OBJ_SPINY_UNK59);
-            cur_obj_set_model(MODEL_SPINY);
-            obj_init_animation_with_sound(o, spiny_seg5_anims_05016EAC, 0);
+            PlaySound2(SOUND_OBJ_SPINY_UNK59);
+            obj_set_model(MODEL_SPINY);
+            func_8029EE20(o, spiny_seg5_anims_05016EAC, 0);
             o->oGraphYOffset = -17.0f;
 
             o->oFaceAnglePitch = 0;
             o->oAction = SPINY_ACT_WALK;
         } else if (o->oMoveFlags & OBJ_MOVE_HIT_WALL) {
-            o->oMoveAngleYaw = cur_obj_reflect_move_angle_off_wall();
+            o->oMoveAngleYaw = obj_reflect_move_angle_off_wall();
         }
 
-        cur_obj_move_standard(-78);
+        obj_move_standard(-78);
 
         if (obj_check_attacks(&sSpinyHitbox, o->oAction)) {
             if (o->parentObj != o) {

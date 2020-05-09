@@ -12,11 +12,11 @@
  */
 void bhv_piranha_plant_waking_bubbles_loop(void) {
     if (o->oTimer == 0) {
-        o->oVelY = random_float() * 10.0f + 5.0f;
-        o->oForwardVel = random_float() * 10.0f + 5.0f;
-        o->oMoveAngleYaw = random_u16();
+        o->oVelY = RandomFloat() * 10.0f + 5.0f;
+        o->oForwardVel = RandomFloat() * 10.0f + 5.0f;
+        o->oMoveAngleYaw = RandomU16();
     }
-    cur_obj_move_using_fvel_and_gravity();
+    obj_move_using_fvel_and_gravity();
 }
 
 /**
@@ -37,11 +37,11 @@ void bhv_piranha_plant_bubble_loop(void) {
     f32 doneShrinkingFrame; // the first frame after shrinking is done
     f32 beginGrowingFrame;  // the frame just before growing begins
 
-    cur_obj_set_pos_relative(parent, 0, 72.0f, 180.0f);
+    obj_set_pos_relative(parent, 0, 72.0f, 180.0f);
 
     switch (o->oAction) {
         case PIRANHA_PLANT_BUBBLE_ACT_IDLE:
-            cur_obj_disable_rendering();
+            obj_disable_rendering();
             scale = 0;
 
             if (parent->oAction == PIRANHA_PLANT_ACT_SLEEPING) {
@@ -51,7 +51,7 @@ void bhv_piranha_plant_bubble_loop(void) {
 
         case PIRANHA_PLANT_BUBBLE_ACT_GROW_SHRINK_LOOP:
             if (parent->oDistanceToMario < parent->oDrawingDistance) {
-                cur_obj_enable_rendering();
+                obj_enable_rendering();
 
                 if (parent->oAction == PIRANHA_PLANT_ACT_SLEEPING) {
                     /**
@@ -84,12 +84,12 @@ void bhv_piranha_plant_bubble_loop(void) {
                     o->oAction++; // move to PIRANHA_PLANT_BUBBLE_ACT_BURST
                 }
             } else {
-                cur_obj_disable_rendering();
+                obj_disable_rendering();
             }
             break;
 
         case PIRANHA_PLANT_BUBBLE_ACT_BURST:
-            cur_obj_disable_rendering();
+            obj_disable_rendering();
             scale = 0;
 
             // Spawn 15 small bubbles to make it look like this bubble burst.
@@ -101,5 +101,5 @@ void bhv_piranha_plant_bubble_loop(void) {
             scale = 1.0f; // this has no effect; it is set to 0 in the idle state
             break;
     }
-    cur_obj_scale(scale);
+    obj_scale(scale);
 }

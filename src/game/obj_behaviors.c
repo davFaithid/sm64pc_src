@@ -7,10 +7,11 @@
 #include "engine/behavior_script.h"
 #include "engine/surface_collision.h"
 #include "engine/math_util.h"
+#include "display.h"
 #include "object_helpers.h"
 #include "behavior_data.h"
 #include "mario.h"
-#include "game_init.h"
+#include "game.h"
 #include "camera.h"
 #include "mario_actions_cutscene.h"
 #include "object_list_processor.h"
@@ -22,6 +23,7 @@
 #include "behavior_actions.h"
 #include "spawn_object.h"
 #include "spawn_sound.h"
+#include "room.h"
 #include "envfx_bubbles.h"
 #include "ingame_menu.h"
 #include "interaction.h"
@@ -77,7 +79,7 @@ void set_yoshi_as_not_dead(void) {
 }
 
 /**
- * An unused geo function. Bears strong similarity to geo_bits_bowser_coloring, and relates something
+ * An unused geo function. Bears strong similarity to Geo18_802B7D44, and relates something
  * of the opacity of an object to something else. Perhaps like, giving a parent object the same
  * opacity?
  */
@@ -146,7 +148,7 @@ s32 obj_find_wall(f32 objNewX, f32 objY, f32 objNewZ, f32 objVelX, f32 objVelZ) 
     hitbox.x = objNewX;
     hitbox.y = objY;
     hitbox.z = objNewZ;
-    hitbox.offsetY = o->hitboxHeight / 2;
+    hitbox.offsetY = o->hitboxHeight / 2.0f;
     hitbox.radius = o->hitboxRadius;
 
     if (find_wall_collisions(&hitbox) != 0) {
@@ -273,7 +275,7 @@ void calc_new_obj_vel_and_pos_y(struct Surface *objFloor, f32 objFloorY, f32 obj
 
         // Bounces an object if the ground is hit fast enough.
         if (o->oVelY < -17.5) {
-            o->oVelY = -(o->oVelY / 2);
+            o->oVelY = -(o->oVelY / 2.0f);
         } else {
             o->oVelY = 0;
         }
@@ -394,10 +396,10 @@ void obj_splash(s32 waterY, s32 objY) {
 
     // Spawns waves if near surface of water and plays a noise if entering.
     if ((f32)(waterY + 30) > o->oPosY && o->oPosY > (f32)(waterY - 30)) {
-        spawn_object(o, MODEL_IDLE_WATER_WAVE, bhvObjectWaterWave);
+        spawn_object(o, MODEL_WATER_WAVES_SURF, bhvObjectWaterWave);
 
         if (o->oVelY < -20.0f) {
-            cur_obj_play_sound_2(SOUND_OBJ_DIVING_INTO_WATER);
+            PlaySound2(SOUND_OBJ_DIVING_INTO_WATER);
         }
     }
 
@@ -411,7 +413,7 @@ void obj_splash(s32 waterY, s32 objY) {
  * Generic object move function. Handles walls, water, floors, and gravity.
  * Returns flags for certain interactions.
  */
-s16 object_step(void) {
+s32 object_step(void) {
     f32 objX = o->oPosX;
     f32 objY = o->oPosY;
     f32 objZ = o->oPosZ;
@@ -461,9 +463,15 @@ s16 object_step(void) {
 /**
  * Takes an object step but does not orient with the object's floor.
  * Used for boulders, falling pillars, and the rolling snowman body.
+ *
+ * TODO: Fix fake EU matching.
  */
-s16 object_step_without_floor_orient(void) {
+s32 object_step_without_floor_orient(void) {
+#ifdef VERSION_EU
+    s32 collisionFlags = 0;
+#else
     s16 collisionFlags = 0;
+#endif
     sOrientObjWithFloor = FALSE;
     collisionFlags = object_step();
     sOrientObjWithFloor = TRUE;
@@ -558,9 +566,9 @@ void obj_return_and_displace_home(struct Object *obj, f32 homeX, UNUSED f32 home
     s16 angleToNewHome;
     f32 homeDistX, homeDistZ;
 
-    if ((s32)(random_float() * 50.0f) == 0) {
-        obj->oHomeX = (f32)(baseDisp * 2) * random_float() - (f32) baseDisp + homeX;
-        obj->oHomeZ = (f32)(baseDisp * 2) * random_float() - (f32) baseDisp + homeZ;
+    if ((s32)(RandomFloat() * 50.0f) == 0) {
+        obj->oHomeX = (f32)(baseDisp * 2) * RandomFloat() - (f32) baseDisp + homeX;
+        obj->oHomeZ = (f32)(baseDisp * 2) * RandomFloat() - (f32) baseDisp + homeZ;
     }
 
     homeDistX = obj->oHomeX - obj->oPosX;
@@ -617,9 +625,9 @@ void obj_spawn_yellow_coins(struct Object *obj, s8 nCoins) {
 
     for (count = 0; count < nCoins; count++) {
         coin = spawn_object(obj, MODEL_YELLOW_COIN, bhvMovingYellowCoin);
-        coin->oForwardVel = random_float() * 20;
-        coin->oVelY = random_float() * 40 + 20;
-        coin->oMoveAngleYaw = random_u16();
+        coin->oForwardVel = RandomFloat() * 20;
+        coin->oVelY = RandomFloat() * 40 + 20;
+        coin->oMoveAngleYaw = RandomU16();
     }
 }
 
@@ -738,12 +746,12 @@ s32 obj_lava_death(void) {
     }
 
     if ((o->oTimer % 8) == 0) {
-        cur_obj_play_sound_2(SOUND_OBJ_BULLY_EXPLODE_2);
+        PlaySound2(SOUND_OBJ_BULLY_EXPLODE_2);
         deathSmoke = spawn_object(o, MODEL_SMOKE, bhvBobombBullyDeathSmoke);
-        deathSmoke->oPosX += random_float() * 20.0f;
-        deathSmoke->oPosY += random_float() * 20.0f;
-        deathSmoke->oPosZ += random_float() * 20.0f;
-        deathSmoke->oForwardVel = random_float() * 10.0f;
+        deathSmoke->oPosX += RandomFloat() * 20.0f;
+        deathSmoke->oPosY += RandomFloat() * 20.0f;
+        deathSmoke->oPosZ += RandomFloat() * 20.0f;
+        deathSmoke->oForwardVel = RandomFloat() * 10.0f;
     }
 
     return FALSE;

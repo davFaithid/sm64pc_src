@@ -7,8 +7,6 @@
 #include "spawn_sound.h"
 #include "object_list_processor.h"
 #include "behavior_data.h"
-#include "engine/graph_node.h"
-#include "thread6.h"
 
 /*
  * execute an object's current sound state with a provided array
@@ -30,14 +28,14 @@ void exec_anim_sound_state(struct SoundState *soundStates) {
             // in the sound state information, -1 (0xFF) is for empty
             // animFrame entries. These checks skips them.
             if ((animFrame = soundStates[stateIdx].animFrame1) >= 0) {
-                if (cur_obj_check_anim_frame(animFrame)) {
-                    cur_obj_play_sound_2(soundStates[stateIdx].soundMagic);
+                if (obj_check_anim_frame(animFrame)) {
+                    PlaySound2(soundStates[stateIdx].soundMagic);
                 }
             }
 
             if ((animFrame = soundStates[stateIdx].animFrame2) >= 0) {
-                if (cur_obj_check_anim_frame(animFrame)) {
-                    cur_obj_play_sound_2(soundStates[stateIdx].soundMagic);
+                if (obj_check_anim_frame(animFrame)) {
+                    PlaySound2(soundStates[stateIdx].soundMagic);
                 }
             }
         } break;
@@ -56,29 +54,19 @@ void create_sound_spawner(s32 soundMagic) {
 
 /*
  * The following 2 functions are relevent to the sound state function
- * above. While only cur_obj_play_sound_2 is used, they may have been intended as
+ * above. While only PlaySound2 is used, they may have been intended as
  * seperate left/right leg functions that went unused.
  */
-void cur_obj_play_sound_1(s32 soundMagic) {
-    if (gCurrentObject->header.gfx.node.flags & GRAPH_RENDER_ACTIVE) {
+void PlaySound(s32 soundMagic) {
+    if (gCurrentObject->header.gfx.node.flags & 0x0001) {
         play_sound(soundMagic, gCurrentObject->header.gfx.cameraToObject);
     }
 }
 
-void cur_obj_play_sound_2(s32 soundMagic) {
-    if (gCurrentObject->header.gfx.node.flags & GRAPH_RENDER_ACTIVE) {
+// duplicate function, but its the used one
+void PlaySound2(s32 soundMagic) {
+    if (gCurrentObject->header.gfx.node.flags & 0x0001) {
         play_sound(soundMagic, gCurrentObject->header.gfx.cameraToObject);
-#ifdef VERSION_SH
-        if (soundMagic == SOUND_OBJ_BOWSER_WALK) {
-            queue_rumble_data(3, 60);
-        }
-        if (soundMagic == SOUND_OBJ_POUNDING_LOUD) {
-            queue_rumble_data(3, 60);
-        }
-        if (soundMagic == SOUND_OBJ_WHOMP_LOWPRIO) {
-            queue_rumble_data(5, 80);
-        }
-#endif
     }
 }
 

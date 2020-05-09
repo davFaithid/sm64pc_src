@@ -12,7 +12,7 @@
  */
 void bhv_beta_chest_bottom_init(void) {
     // Set the object's model
-    cur_obj_set_model(MODEL_TREASURE_CHEST_BASE);
+    obj_set_model(MODEL_TREASURE_CHEST_BASE);
 
     // ??? Pointless code?
     // Maybe chests were originally intended to have random yaws.
@@ -20,7 +20,7 @@ void bhv_beta_chest_bottom_init(void) {
     // a point with different yaws. Maybe this feature was lazily
     // cancelled by setting the yaw to 0, right before this beta
     // object was discarded?
-    o->oMoveAngleYaw = random_u16();
+    o->oMoveAngleYaw = RandomU16();
     o->oMoveAngleYaw = 0;
 
     // Spawn the chest lid 97 units in the +Y direction and 77 units in the -Z direction.
@@ -33,7 +33,7 @@ void bhv_beta_chest_bottom_init(void) {
  * with radius 200 units and height 200 units.
  */
 void bhv_beta_chest_bottom_loop(void) {
-    cur_obj_push_mario_away_from_cylinder(200.0f, 200.0f);
+    obj_push_mario_away_from_cylinder(200.0f, 200.0f);
 }
 
 /**

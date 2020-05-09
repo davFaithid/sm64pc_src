@@ -3,9 +3,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifndef VERSION_EU
 #include "prevent_bss_reordering.h"
-#endif
 #include "gd_types.h"
 #include "gd_macros.h"
 #include "dynlists/dynlists.h"
@@ -22,12 +20,20 @@
 #include "gd_math.h"
 #include "shape_helper.h"
 
+#include "gfx_dimensions.h"
+
 #define MAX_GD_DLS 1000
 #define OS_MESG_SI_COMPLETE 0x33333333
 
+#ifdef TARGET_N64
 #define GD_VIRTUAL_TO_PHYSICAL(addr) ((uintptr_t)(addr) &0x0FFFFFFF)
 #define GD_LOWER_24(addr) ((uintptr_t)(addr) &0x00FFFFFF)
 #define GD_LOWER_29(addr) (((uintptr_t)(addr)) & 0x1FFFFFFF)
+#else
+#define GD_VIRTUAL_TO_PHYSICAL(addr) (addr)
+#define GD_LOWER_24(addr) ((uintptr_t)(addr))
+#define GD_LOWER_29(addr) (((uintptr_t)(addr)))
+#endif
 
 #define MTX_INTPART_PACK(w1, w2) (((w1) &0xFFFF0000) | (((w2) >> 16) & 0xFFFF))
 #define MTX_FRACPART_PACK(w1, w2) ((((w1) << 16) & 0xFFFF0000) | ((w2) &0xFFFF))
@@ -82,25 +88,6 @@ struct DynListBankInfo {
 };
 
 // bss
-#ifdef VERSION_EU
-static OSMesgQueue D_801BE830; // controller msg queue
-static OSMesg D_801BE848[10];
-u8 EUpad1[0x40];
-static OSMesgQueue D_801BE8B0;
-static OSMesgQueue sGdDMAQueue; // @ 801BE8C8
-// static u32 unref_801be870[16];
-// static u32 unref_801be8e0[25];
-// static u32 unref_801be948[13];
-u8 EUpad2[0x64];
-static OSMesg sGdMesgBuf[1]; // @ 801BE944
-u8 EUpad3[0x34];
-static OSMesg D_801BE97C; // msg buf for D_801BE8B0 queue
-static OSIoMesg D_801BE980;
-static struct ObjView *D_801BE994; // store if View flag 0x40 set
-
-u8 EUpad4[0x88];
-#endif
-
 static OSContStatus D_801BAE60[4];
 static OSContPad sGdContPads[4];    // @ 801BAE70
 static OSContPad sPrevFrameCont[4]; // @ 801BAE88
@@ -163,7 +150,6 @@ static s32 sPickBufPosition;                         // @ 801BE784
 static s16 *sPickBuf;                                // @ 801BE788
 static LookAt D_801BE790[2];
 static LookAt D_801BE7D0[3];
-#ifndef VERSION_EU
 static OSMesgQueue D_801BE830; // controller msg queue
 static OSMesg D_801BE848[10];
 static u32 unref_801be870[16];
@@ -175,7 +161,6 @@ static u32 unref_801be948[13];
 static OSMesg D_801BE97C; // msg buf for D_801BE8B0 queue
 static OSIoMesg D_801BE980;
 static struct ObjView *D_801BE994; // store if View flag 0x40 set
-#endif
 
 // data
 static u32 unref_801a8670 = 0;
@@ -1683,6 +1668,7 @@ u32 Unknown8019EC88(Gfx *dl, UNUSED s32 arg1) {
 
 /* 24D4C4 -> 24D63C; orig name: func_8019ECF4 */
 void mat4_to_mtx(const Mat4f *src, Mtx *dst) {
+#ifdef TARGET_N64
     s32 i; // 14
     s32 j; // 10
     s32 w1;
@@ -1700,6 +1686,9 @@ void mat4_to_mtx(const Mat4f *src, Mtx *dst) {
             mtxFrc++;
         }
     }
+#else
+    guMtxF2L(src, dst);
+#endif
 }
 
 /* 24D63C -> 24D6E4; orig name: func_8019EE6C */
@@ -1755,8 +1744,8 @@ void func_8019F258(f32 x, f32 y, f32 z) {
     vec.x = x;
     vec.y = y;
     vec.z = z;
-    gd_set_identity_mat4(&mtx);
-    gd_scale_mat4f_by_vec3f(&mtx, &vec);
+    set_identity_mat4(&mtx);
+    func_8019415C(&mtx, &vec);
     add_mat4_to_dl(&mtx);
 }
 
@@ -1764,8 +1753,8 @@ void func_8019F258(f32 x, f32 y, f32 z) {
 void func_8019F2C4(f32 arg0, s8 arg1) {
     Mat4f mtx; // 18
 
-    gd_set_identity_mat4(&mtx);
-    gd_absrot_mat4(&mtx, arg1 - 120, -arg0);
+    set_identity_mat4(&mtx);
+    absrot_mat4(&mtx, arg1 - 120, -arg0);
     add_mat4_to_dl(&mtx);
 }
 
@@ -1776,7 +1765,7 @@ void func_8019F318(struct ObjCamera *cam, f32 arg1, f32 arg2, f32 arg3, f32 arg4
 
     arg7 *= RAD_PER_DEG;
 
-    gd_mat4f_lookat(&cam->unkE8, arg1, arg2, arg3, arg4, arg5, arg6, gd_sin_d(arg7), gd_cos_d(arg7),
+    func_80193B68(&cam->unkE8, arg1, arg2, arg3, arg4, arg5, arg6, gd_sin_d(arg7), gd_cos_d(arg7),
                   0.0f);
     // 8019F3C8
     mat4_to_mtx(&cam->unkE8, &DL_CURRENT_MTX(sCurrentGdDl));
@@ -2333,7 +2322,9 @@ void parse_p1_controller(void) {
     OSContPad *p1contPrev;    // 30
     u8 *gdCtrlBytes;          // 2C
     u8 *prevGdCtrlBytes;      // 28
-
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+    aspect *= 0.75;
+	
     gdctrl = &gGdCtrl;
     gdCtrlBytes = (u8 *) gdctrl;
     prevGdCtrlBytes = (u8 *) gdctrl->prevFrame;
@@ -2430,14 +2421,14 @@ void parse_p1_controller(void) {
         gdctrl->csrY -= gdctrl->stickY * 0.1; //? 0.1f
     }
     // border checks? is this for the cursor finger movement?
-    if ((f32) gdctrl->csrX < (sScreenView2->parent->upperLeft.x + 16.0f)) {
-        gdctrl->csrX = (s32)(sScreenView2->parent->upperLeft.x + 16.0f);
+    if ((f32) gdctrl->csrX < (sScreenView2->parent->upperLeft.x + (16.0f/aspect))) {
+        gdctrl->csrX = (s32)(sScreenView2->parent->upperLeft.x + (16.0f/aspect));
     }
 
     if ((f32) gdctrl->csrX
-        > (sScreenView2->parent->upperLeft.x + sScreenView2->parent->lowerRight.x - 48.0f)) {
+        > (sScreenView2->parent->upperLeft.x + sScreenView2->parent->lowerRight.x - (48.0/aspect))) {
         gdctrl->csrX =
-            (s32)(sScreenView2->parent->upperLeft.x + sScreenView2->parent->lowerRight.x - 48.0f);
+            (s32)(sScreenView2->parent->upperLeft.x + sScreenView2->parent->lowerRight.x - (48.0/aspect));
     }
 
     if ((f32) gdctrl->csrY < (sScreenView2->parent->upperLeft.y + 16.0f)) {
@@ -3137,7 +3128,7 @@ void gd_init(void) {
     }
 
     sNumLights = NUMLIGHTS_2;
-    gd_set_identity_mat4(&sInitIdnMat4);
+    set_identity_mat4(&sInitIdnMat4);
     mat4_to_mtx(&sInitIdnMat4, &sIdnMtx);
     remove_all_memtrackers();
     null_obj_lists();
@@ -3425,16 +3416,19 @@ void Unknown801A5FF8(struct ObjGroup *arg0) {
 }
 
 /* 254AC0 -> 254DFC; orig name: PutSprite */
+// thanks to gamemasterplc again for fixing this
 void gd_put_sprite(u16 *sprite, s32 x, s32 y, s32 wx, s32 wy) {
     s32 c; // 5c
     s32 r; // 58
-
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO * 0.75;
+    x *= aspect;
+    
     gSPDisplayList(next_gfx(), osVirtualToPhysical(gd_dl_sprite_start_tex_block));
-    for (r = 0; r < wy; r += 32) {
-        for (c = 0; c < wx; c += 32) {
-             gDPLoadTextureBlock(next_gfx(), (r * 32) + sprite + c, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0,
+    for (r = 0; r < wy; r += 0x20) {
+        for (c = 0; c < wx; c += 0x20) {
+             gDPLoadTextureBlock(next_gfx(), (r * 0x20) + sprite + c, G_IM_FMT_RGBA, G_IM_SIZ_16b, 32, 32, 0,
                 G_TX_WRAP | G_TX_NOMIRROR, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOMASK, G_TX_NOLOD, G_TX_NOLOD)
-             gSPTextureRectangle(next_gfx(), x << 2, (y + r) << 2, (x + 32) << 2, (y + r + 32) << 2,
+             gSPTextureRectangle(next_gfx(), x << 2, (y + r) << 2, (x + 0x20) << 2, (y + r + 0x20) << 2,
                 G_TX_RENDERTILE, 0, 0, 1 << 10, 1 << 10);
         }
     }
@@ -3615,6 +3609,7 @@ void Unknown801A6E30(UNUSED u32 a0) {
 void Unknown801A6E44(UNUSED u32 a0) {
 }
 
+#ifdef TARGET_N64
 /* 255628 -> 255704; orig name: func_801A6E58 */
 void gd_block_dma(u32 devAddr, void *vAddr, s32 size) {
     s32 transfer; // 2c
@@ -3692,6 +3687,11 @@ struct GdObj *load_dynlist(struct DynList *dynlist) {
 
     return loadedList;
 }
+#else
+struct GdObj *load_dynlist(struct DynList *dynlist) {
+    return proc_dynlist(dynlist);
+}
+#endif
 
 /* 255988 -> 25599C */
 void stub_801A71B8(UNUSED u32 a0) {

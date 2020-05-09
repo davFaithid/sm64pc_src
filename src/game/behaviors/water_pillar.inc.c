@@ -1,12 +1,12 @@
 // water_pillar.c.inc
 
-void water_level_pillar_undrained(void) {
+void func_802B95A4(void) {
     struct Object *sp1C;
     switch (o->oAction) {
         case 0:
-            if (cur_obj_is_mario_ground_pounding_platform()) {
+            if (obj_is_mario_ground_pounding_platform()) {
                 o->oAction++;
-                spawn_mist_particles();
+                func_802A3004();
             }
             break;
         case 1:
@@ -16,14 +16,14 @@ void water_level_pillar_undrained(void) {
                 o->oAction++;
             break;
         case 2:
-            sp1C = cur_obj_nearest_object_with_behavior(bhvWaterLevelPillar);
+            sp1C = obj_nearest_object_with_behavior(bhvWaterLevelPillar);
             if (sp1C != NULL) {
                 if (sp1C->oAction < 2)
                     o->oAction++;
             }
             break;
         case 3:
-            sp1C = cur_obj_nearest_object_with_behavior(bhvWaterLevelPillar);
+            sp1C = obj_nearest_object_with_behavior(bhvWaterLevelPillar);
             if (sp1C != NULL) {
                 if (sp1C->oAction > 1) {
                     o->oAction++;
@@ -34,15 +34,12 @@ void water_level_pillar_undrained(void) {
             }
             break;
         case 4:
-            cur_obj_play_sound_1(SOUND_ENV_WATER_DRAIN);
+            PlaySound(SOUND_ENV_WATER_DRAIN);
             if (o->oTimer < 300) {
                 gEnvironmentLevels[2] =
                     (s32) approach_f32_symmetric(gEnvironmentLevels[2], -2450.0f, 5.0f);
                 gEnvironmentLevels[0] =
                     (s32) approach_f32_symmetric(gEnvironmentLevels[0], -2450.0f, 5.0f);
-#ifdef VERSION_SH
-                reset_rumble_timers_2(2);
-#endif
             } else
                 o->oAction++;
             break;
@@ -51,7 +48,7 @@ void water_level_pillar_undrained(void) {
     }
 }
 
-void water_level_pillar_drained(void) {
+void func_802B97E4(void) {
     if (o->oTimer == 0) {
         o->oPosY -= 80.0f;
         gEnvironmentLevels[2] = -2450;
@@ -66,9 +63,9 @@ void bhv_water_level_pillar_init(void) {
 
 void bhv_water_level_pillar_loop(void) {
     if (o->oWaterLevelPillarUnkF8)
-        water_level_pillar_drained();
+        func_802B97E4();
     else
-        water_level_pillar_undrained();
+        func_802B95A4();
     gEnvironmentRegions[18] = gEnvironmentLevels[2];
     gEnvironmentRegions[6] = gEnvironmentLevels[0];
 }

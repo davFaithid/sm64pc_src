@@ -63,7 +63,7 @@ void bhv_intro_lakitu_loop(void) {
 
     switch (gCurrentObject->oAction) {
         case 0:
-            cur_obj_disable_rendering();
+            obj_disable_rendering();
             gCurrentObject->oIntroLakituSplineSegment = 0.f;
             gCurrentObject->oIntroLakituSplineSegmentProgress = 0.f;
             gCurrentObject->oIntroLakituCloud =
@@ -75,26 +75,26 @@ void bhv_intro_lakitu_loop(void) {
             break;
 
         case 1:
-            cur_obj_enable_rendering();
+            obj_enable_rendering();
             if ((gCutsceneTimer > 350) && (gCutsceneTimer < 458)) {
                 gCurrentObject->oPosX = gCamera->pos[0];
                 gCurrentObject->oPosY = gCamera->pos[1] + 500.f;
                 gCurrentObject->oPosZ = gCamera->pos[2];
             }
             if (gCutsceneTimer > 52)
-                cur_obj_play_sound_1(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
+                PlaySound(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
 
             if (intro_lakitu_set_pos_and_focus(gCurrentObject, gIntroLakituStartToPipeOffsetFromCamera,
                                                gIntroLakituStartToPipeFocus) == 1)
                 gCurrentObject->oAction += 1;
 
             switch (gCurrentObject->oTimer) {
-#if defined(VERSION_US) || defined(VERSION_SH)
+#ifdef VERSION_US
                 case 534:
-                    cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
+                    PlaySound2(SOUND_ACTION_FLYING_FAST);
                     break;
                 case 581:
-                    cur_obj_play_sound_2(SOUND_ACTION_INTRO_UNK45E);
+                    PlaySound2(SOUND_ACTION_INTRO_UNK45E);
                     break;
 #endif
                 case 73:
@@ -112,17 +112,13 @@ void bhv_intro_lakitu_loop(void) {
             }
 #ifdef VERSION_EU
             if (gCurrentObject->oTimer == 446)
-                cur_obj_play_sound_2(SOUND_ACTION_FLYING_FAST);
+                PlaySound2(SOUND_ACTION_FLYING_FAST);
             if (gCurrentObject->oTimer == 485)
-                cur_obj_play_sound_2(SOUND_ACTION_INTRO_UNK45E);
+                PlaySound2(SOUND_ACTION_INTRO_UNK45E);
 #endif
             break;
         case 2:
-#ifdef VERSION_EU
-            if (gCutsceneTimer > 599) {
-#else
             if (gCutsceneTimer > 720) {
-#endif
                 gCurrentObject->oAction += 1;
                 gCurrentObject->oIntroLakituUnk100 = 1400.f;
                 gCurrentObject->oIntroLakituUnk104 = -4096.f;
@@ -132,11 +128,11 @@ void bhv_intro_lakitu_loop(void) {
                 gCurrentObject->oFaceAngleYaw = gCurrentObject->oMoveAngleYaw + 0x4000;
                 gCurrentObject->oMoveAnglePitch = 0x800;
             }
-            cur_obj_play_sound_1(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
+            PlaySound(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
             break;
 
         case 3:
-            cur_obj_play_sound_1(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
+            PlaySound(SOUND_AIR_LAKITU_FLY_HIGHPRIO);
             vec3f_set(sp58, -1128.f, 560.f, 4664.f);
             gCurrentObject->oMoveAngleYaw += 0x200;
             gCurrentObject->oIntroLakituUnk100 =
@@ -158,7 +154,7 @@ void bhv_intro_lakitu_loop(void) {
             if (gCurrentObject->oTimer == 31) {
                 gCurrentObject->oPosY -= 158.f;
                 // Spawn white ground particles
-                spawn_mist_from_global();
+                func_802ADA94();
                 gCurrentObject->oPosY += 158.f;
             }
 #ifdef VERSION_EU
@@ -168,16 +164,16 @@ void bhv_intro_lakitu_loop(void) {
 #endif
 
             if (gCurrentObject->oTimer == TIMER) {
-                obj_mark_for_deletion(gCurrentObject);
-                obj_mark_for_deletion(gCurrentObject->oIntroLakituCloud);
+                mark_object_for_deletion(gCurrentObject);
+                mark_object_for_deletion(gCurrentObject->oIntroLakituCloud);
             }
 #ifndef VERSION_JP
             if (gCurrentObject->oTimer == 14)
-                cur_obj_play_sound_2(SOUND_ACTION_INTRO_UNK45F);
+                PlaySound2(SOUND_ACTION_INTRO_UNK45F);
 #endif
             break;
         case 100:
-            cur_obj_enable_rendering();
+            obj_enable_rendering();
             vec3f_set(sp64, -100.f, 100.f, 300.f);
             offset_rotated(sp4C, gCamera->pos, sp64, sMarioCamState->faceAngle);
             vec3f_to_object_pos(gCurrentObject, sp4C);
@@ -204,7 +200,7 @@ void bhv_intro_lakitu_loop(void) {
                 gCurrentObject->oMoveAnglePitch = 0xE00;
             }
             gCurrentObject->oFaceAnglePitch = 0;
-            cur_obj_set_pos_via_transform();
+            func_802A2A38();
             break;
 
         case 102:
@@ -219,7 +215,7 @@ void bhv_intro_lakitu_loop(void) {
             gCurrentObject->oMoveAnglePitch =
                 camera_approach_s16_symmetric(gCurrentObject->oMoveAnglePitch, -0x2000, 0x5A);
             gCurrentObject->oFaceAnglePitch = 0;
-            cur_obj_set_pos_via_transform();
+            func_802A2A38();
             break;
     }
 }

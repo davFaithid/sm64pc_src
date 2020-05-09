@@ -9,6 +9,7 @@
 #include "surface_collision.h"
 #include "surface_load.h"
 #include "game/object_list_processor.h"
+#include "game/room.h"
 
 /**************************************************
  *                      WALLS                      *
@@ -20,9 +21,9 @@
  */
 static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode,
                                           struct WallCollisionData *data) {
-    register struct Surface *surf;
     register f32 offset;
     register f32 radius = data->radius;
+    register struct Surface *surf;
     register f32 x = data->x;
     register f32 y = data->y + data->offsetY;
     register f32 z = data->z;
@@ -59,8 +60,12 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode,
         //  the fact they are floating point, certain floating point positions
         //  along the seam of two walls may collide with neither wall or both walls.
         if (surf->flags & SURFACE_FLAG_X_PROJECTION) {
-            w1 = -surf->vertex1[2];            w2 = -surf->vertex2[2];            w3 = -surf->vertex3[2];
-            y1 = surf->vertex1[1];            y2 = surf->vertex2[1];            y3 = surf->vertex3[1];
+            w1 = -surf->vertex1[2];
+            w2 = -surf->vertex2[2];
+            w3 = -surf->vertex3[2];
+            y1 = surf->vertex1[1];
+            y2 = surf->vertex2[1];
+            y3 = surf->vertex3[1];
 
             if (surf->normal.x > 0.0f) {
                 if ((y1 - y) * (w2 - w1) - (w1 - -pz) * (y2 - y1) > 0.0f) {
@@ -84,8 +89,12 @@ static s32 find_wall_collisions_from_list(struct SurfaceNode *surfaceNode,
                 }
             }
         } else {
-            w1 = surf->vertex1[0];            w2 = surf->vertex2[0];            w3 = surf->vertex3[0];
-            y1 = surf->vertex1[1];            y2 = surf->vertex2[1];            y3 = surf->vertex3[1];
+            w1 = surf->vertex1[0];
+            w2 = surf->vertex2[0];
+            w3 = surf->vertex3[0];
+            y1 = surf->vertex1[1];
+            y2 = surf->vertex2[1];
+            y3 = surf->vertex3[1];
 
             if (surf->normal.z > 0.0f) {
                 if ((y1 - y) * (w2 - w1) - (w1 - px) * (y2 - y1) > 0.0f) {
@@ -361,7 +370,7 @@ f32 find_ceil(f32 posX, f32 posY, f32 posZ, struct Surface **pceil) {
 /**
  * Find the height of the highest floor below an object.
  */
-f32 unused_obj_find_floor_height(struct Object *obj) {
+static f32 unused_obj_find_floor_height(struct Object *obj) {
     struct Surface *floor;
     f32 floorHeight = find_floor(obj->oPosX, obj->oPosY, obj->oPosZ, &floor);
     return floorHeight;
@@ -487,7 +496,7 @@ f32 find_floor_height(f32 x, f32 y, f32 z) {
  * Find the highest dynamic floor under a given position. Perhaps originally static and
  * and dynamic floors were checked separately.
  */
-f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
+static f32 unused_find_dynamic_floor(f32 xPos, f32 yPos, f32 zPos, struct Surface **pfloor) {
     struct SurfaceNode *surfaceList;
     struct Surface *floor;
     f32 floorHeight = -11000.0f;
@@ -740,12 +749,10 @@ void debug_surface_list_info(f32 xPos, f32 zPos) {
  * An unused function that finds and interacts with any type of surface.
  * Perhaps an original implementation of surfaces before they were more specialized.
  */
-s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f32 radius,
+static s32 unused_resolve_floor_or_ceil_collisions(s32 checkCeil, f32 *px, f32 *py, f32 *pz, f32 radius,
                                                    struct Surface **psurface, f32 *surfaceHeight) {
     f32 nx, ny, nz, oo;
-    f32 x = *px;
-    f32 y = *py;
-    f32 z = *pz;
+    f32 x = *px, y = *py, z = *pz;
     f32 offset, distance;
 
     *psurface = NULL;

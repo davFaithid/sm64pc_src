@@ -44,7 +44,6 @@ GeoLayoutCommandProc GeoLayoutJumpTable[] = {
     geo_layout_cmd_node_culling_radius,
 };
 
-struct GraphNode gObjParentGraphNode;
 struct AllocOnlyPool *gGraphNodePool;
 struct GraphNode *gCurRootGraphNode;
 
@@ -99,6 +98,7 @@ s16 gGeoLayoutStackIndex; // similar to SP register in MIPS
 UNUSED s16 D_8038BD7C;
 s16 gGeoLayoutReturnIndex; // similar to RA register in MIPS
 u8 *gGeoLayoutCommand;
+struct GraphNode gObjParentGraphNode;
 
 u32 unused_8038B894[3] = { 0 };
 

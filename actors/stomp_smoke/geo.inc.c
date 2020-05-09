@@ -1,8 +1,7 @@
 // 0x1700009C
-const GeoLayout small_water_splash_geo[] = {
+const GeoLayout spot_on_ground_geo[] = {
    GEO_SWITCH_CASE(6, geo_switch_anim_state),
    GEO_OPEN_NODE(),
-   // TODO: Rename these display lists
       GEO_DISPLAY_LIST(LAYER_TRANSPARENT, stomp_smoke_seg4_dl_040251F8),
       GEO_DISPLAY_LIST(LAYER_TRANSPARENT, stomp_smoke_seg4_dl_04025210),
       GEO_DISPLAY_LIST(LAYER_TRANSPARENT, stomp_smoke_seg4_dl_04025228),

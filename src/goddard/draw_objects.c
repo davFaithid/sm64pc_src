@@ -12,7 +12,10 @@
 #include "gd_math.h"
 #include "shape_helper.h"
 #include "renderer.h"
+#include "prevent_bss_reordering.h"
 #include "draw_objects.h"
+
+#include "gfx_dimensions.h"
 
 /**
  * @file draw_objects.c
@@ -142,8 +145,8 @@ void Unknown801781DC(struct ObjZone *zone) {
         lightPos.y = light->position.y;
         lightPos.z = light->position.z;
         unk = (struct ObjUnk200000 *) obj;
-        sp34 = gd_dot_vec3f(&unk->unk34->normal, &unk->unk30->pos);
-        sp30 = gd_dot_vec3f(&unk->unk34->normal, &lightPos);
+        sp34 = dot_product_vec3f(&unk->unk34->normal, &unk->unk30->pos);
+        sp30 = dot_product_vec3f(&unk->unk34->normal, &lightPos);
         lightPos.x -= unk->unk34->normal.x * (sp30 - sp34);
         lightPos.y -= unk->unk34->normal.y * (sp30 - sp34);
         lightPos.z -= unk->unk34->normal.z * (sp30 - sp34);
@@ -260,7 +263,7 @@ void draw_shape_2d(struct ObjShape *shape, s32 flag, UNUSED f32 c, UNUSED f32 d,
         sp1C.y = g;
         sp1C.z = h;
         if (gViewUpdateCamera != NULL) {
-            gd_rotate_and_translate_vec3f(&sp1C, &gViewUpdateCamera->unkE8);
+            func_80196430(&sp1C, &gViewUpdateCamera->unkE8);
         }
         translate_load_mtx_gddl(sp1C.x, sp1C.y, sp1C.z);
     }
@@ -284,11 +287,11 @@ void draw_light(struct ObjLight *light) {
     sLightColours[0].b = light->colour.b;
 
     if (light->flags & LIGHT_UNK02) {
-        gd_set_identity_mat4(&sp54);
+        set_identity_mat4(&sp54);
         sp94.x = -light->unk80.x;
         sp94.y = -light->unk80.y;
         sp94.z = -light->unk80.z;
-        gd_create_origin_lookat(&sp54, &sp94, 0.0f);
+        func_80194358(&sp54, &sp94, 0.0f);
         uMultiplier = light->unk38 / 45.0;
         shape = D_801A82E4;
         uMatPtr = &sp54;
@@ -693,14 +696,17 @@ void func_80179B64(struct ObjGroup *group) {
                                 (applyproc_t) Unknown80179ACC, group);
 }
 
-/* 22836C -> 228498 */
-void func_80179B9C(struct GdVec3f *pos, struct ObjCamera *cam, struct ObjView *view) {
-    gd_rotate_and_translate_vec3f(pos, &cam->unkE8);
+// plc again
+void func_80179B9C(struct GdVec3f *pos, struct ObjCamera *cam, struct ObjView *view)
+{
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+    aspect *= 0.75;
+    func_80196430(pos, &cam->unkE8);
     if (pos->z > -256.0f) {
         return;
     }
-
-    pos->x *= 256.0 / -pos->z;
+    
+    pos->x *= 256.0 / -pos->z / aspect;
     pos->y *= 256.0 / pos->z;
     pos->x += view->lowerRight.x / 2.0f;
     pos->y += view->lowerRight.y / 2.0f;
@@ -1022,7 +1028,7 @@ void Proc8017A980(struct ObjLight *light) {
     sLightPositionCache[light->id].x = light->position.x - sLightPositionOffset.x;
     sLightPositionCache[light->id].y = light->position.y - sLightPositionOffset.y;
     sLightPositionCache[light->id].z = light->position.z - sLightPositionOffset.z;
-    gd_normalize_vec3f(&sLightPositionCache[light->id]);
+    into_unit_vec3f(&sLightPositionCache[light->id]);
     if (light->flags & LIGHT_UNK20) {
         sPhongLightPosition.x = sLightPositionCache[light->id].x;
         sPhongLightPosition.y = sLightPositionCache[light->id].y;
@@ -1031,7 +1037,7 @@ void Proc8017A980(struct ObjLight *light) {
     }
     sp24 = light->unk30;
     if (light->flags & LIGHT_UNK02) {
-        sp20 = -gd_dot_vec3f(&sLightPositionCache[light->id], &light->unk80);
+        sp20 = -dot_product_vec3f(&sLightPositionCache[light->id], &light->unk80);
         sp1C = 1.0 - light->unk38 / 90.0;
         if (sp20 > sp1C) {
             sp20 = (sp20 - sp1C) * (1.0 / (1.0 - sp1C));

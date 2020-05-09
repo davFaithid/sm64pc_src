@@ -6,6 +6,7 @@ void __osContGetInitData(u8 *, OSContStatus *);
 
 u32 D_80334810 = 0; // probably initialized
 
+extern u32 D_80365D1C;
 extern u64 osClockRate;
 
 // these probably belong in EEPROMlongread or something
@@ -42,11 +43,7 @@ s32 osContInit(OSMesgQueue *mq, u8 *a1, OSContStatus *status) {
     sp78 = __osSiRawStartDma(0, D_80365CE0);
     osRecvMesg(mq, &mesg, OS_MESG_BLOCK);
     __osContGetInitData(a1, status);
-#ifdef VERSION_EU
-    D_80365D20 = 0;
-#else
     D_80365D20 = 255;
-#endif
     __osSiCreateAccessQueue();
     osCreateMesgQueue(&_osContMesgQueue, _osContMesgBuff, 1);
     return sp78;
@@ -61,8 +58,8 @@ void __osContGetInitData(u8 *a0, OSContStatus *status) {
     sp14 = &(D_80365CE0[0].request);
     for (i = 0; i < _osCont_numControllers; i++, sp14++, status++) {
         spc = *(OSContPackedRequest *) sp14;
-        status->errno = (spc.unk02 & 0xc0) >> 4;
-        if (status->errno == 0) {
+        status->errnum = (spc.unk02 & 0xc0) >> 4;
+        if (status->errnum == 0) {
             status->type = spc.unk05 << 8 | spc.unk04;
             status->status = spc.unk06;
 

@@ -1,7 +1,7 @@
 #include <ultra64.h>
 
 #include "sm64.h"
-#include "game_init.h"
+#include "game.h"
 #include "main.h"
 #include "engine/math_util.h"
 #include "area.h"
@@ -9,8 +9,6 @@
 #include "save_file.h"
 #include "sound_init.h"
 #include "level_table.h"
-#include "course_table.h"
-#include "thread6.h"
 
 #define MENU_DATA_MAGIC 0x4849
 #define SAVE_FILE_MAGIC 0x4441
@@ -24,7 +22,7 @@ struct WarpCheckpoint gWarpCheckpoint;
 s8 gMainMenuDataModified;
 s8 gSaveFileModified;
 
-u8 gLastCompletedCourseNum = COURSE_NONE;
+u8 gLastCompletedCourseNum = 0;
 u8 gLastCompletedStarNum = 0;
 s8 sUnusedGotGlobalCoinHiScore = 0;
 u8 gGotFileCoinHiScore = 0;
@@ -46,7 +44,7 @@ STATIC_ASSERT(ARRAY_COUNT(gLevelToCourseNumTable) == LEVEL_COUNT - 1,
 
 // This was probably used to set progress to 100% for debugging, but
 // it was removed from the release ROM.
-static void stub_save_file_1(void) {
+static void no_op(void) {
     UNUSED s32 pad;
 }
 
@@ -64,14 +62,8 @@ static s32 read_eeprom_data(void *buffer, s32 size) {
         u32 offset = (u32)((u8 *) buffer - (u8 *) &gSaveBuffer) / 8;
 
         do {
-#ifdef VERSION_SH
-            block_until_rumble_pak_free();
-#endif
             triesLeft--;
             status = osEepromLongRead(&gSIEventMesgQueue, offset, buffer, size);
-#ifdef VERSION_SH
-            release_rumble_pak_control();
-#endif
         } while (triesLeft > 0 && status != 0);
     }
 
@@ -92,14 +84,8 @@ static s32 write_eeprom_data(void *buffer, s32 size) {
         u32 offset = (u32)((u8 *) buffer - (u8 *) &gSaveBuffer) >> 3;
 
         do {
-#ifdef VERSION_SH
-            block_until_rumble_pak_free();
-#endif
             triesLeft--;
             status = osEepromLongWrite(&gSIEventMesgQueue, offset, buffer, size);
-#ifdef VERSION_SH
-            release_rumble_pak_control();
-#endif
         } while (triesLeft > 0 && status != 0);
     }
 
@@ -110,7 +96,7 @@ static s32 write_eeprom_data(void *buffer, s32 size) {
  * Sum the bytes in data to data + size - 2. The last two bytes are ignored
  * because that is where the checksum is stored.
  */
-static u16 calc_checksum(u8 *data, s32 size) {
+static s32 calc_checksum(u8 *data, s32 size) {
     u16 chksum = 0;
 
     while (size-- > 2) {
@@ -276,8 +262,7 @@ void save_file_erase(s32 fileIndex) {
     save_file_do_save(fileIndex);
 }
 
-//! Needs to be s32 to match on -O2, despite no return value.
-BAD_RETURN(s32) save_file_copy(s32 srcFileIndex, s32 destFileIndex) {
+void save_file_copy(s32 srcFileIndex, s32 destFileIndex) {
     UNUSED s32 pad;
 
     touch_high_score_ages(destFileIndex);
@@ -330,7 +315,7 @@ void save_file_load_all(void) {
         }
     }
 
-    stub_save_file_1();
+    no_op();
 }
 
 /**
@@ -463,18 +448,18 @@ s32 save_file_get_total_star_count(s32 fileIndex, s32 minCourse, s32 maxCourse) 
     return save_file_get_course_star_count(fileIndex, -1) + count;
 }
 
-void save_file_set_flags(u32 flags) {
+void save_file_set_flags(s32 flags) {
     gSaveBuffer.files[gCurrSaveFileNum - 1][0].flags |= (flags | SAVE_FLAG_FILE_EXISTS);
     gSaveFileModified = TRUE;
 }
 
-void save_file_clear_flags(u32 flags) {
+void save_file_clear_flags(s32 flags) {
     gSaveBuffer.files[gCurrSaveFileNum - 1][0].flags &= ~flags;
     gSaveBuffer.files[gCurrSaveFileNum - 1][0].flags |= SAVE_FLAG_FILE_EXISTS;
     gSaveFileModified = TRUE;
 }
 
-u32 save_file_get_flags(void) {
+s32 save_file_get_flags(void) {
     if (gCurrCreditsEntry != 0 || gCurrDemoInput != NULL) {
         return 0;
     }
@@ -485,8 +470,8 @@ u32 save_file_get_flags(void) {
  * Return the bitset of obtained stars in the specified course.
  * If course is -1, return the bitset of obtained castle secret stars.
  */
-u32 save_file_get_star_flags(s32 fileIndex, s32 courseIndex) {
-    u32 starFlags;
+s32 save_file_get_star_flags(s32 fileIndex, s32 courseIndex) {
+    s32 starFlags;
 
     if (courseIndex == -1) {
         starFlags = (gSaveBuffer.files[fileIndex][0].flags >> 24) & 0x7F;
@@ -501,7 +486,7 @@ u32 save_file_get_star_flags(s32 fileIndex, s32 courseIndex) {
  * Add to the bitset of obtained stars in the specified course.
  * If course is -1, add ot the bitset of obtained castle secret stars.
  */
-void save_file_set_star_flags(s32 fileIndex, s32 courseIndex, u32 starFlags) {
+void save_file_set_star_flags(s32 fileIndex, s32 courseIndex, s32 starFlags) {
     if (courseIndex == -1) {
         gSaveBuffer.files[fileIndex][0].flags |= starFlags << 24;
     } else {
@@ -595,8 +580,8 @@ u16 eu_get_language(void) {
 #endif
 
 void disable_warp_checkpoint(void) {
-    // check_warp_checkpoint() checks to see if gWarpCheckpoint.courseNum != COURSE_NONE
-    gWarpCheckpoint.courseNum = COURSE_NONE;
+    // check_warp_checkpoint() checks to see if gWarpCheckpoint.courseNum != 0
+    gWarpCheckpoint.courseNum = 0;
 }
 
 /**
@@ -624,7 +609,7 @@ s32 check_warp_checkpoint(struct WarpNode *warpNode) {
     s16 currCourseNum = gLevelToCourseNumTable[(warpNode->destLevel & 0x7F) - 1];
 
     // gSavedCourseNum is only used in this function.
-    if (gWarpCheckpoint.courseNum != COURSE_NONE && gSavedCourseNum == currCourseNum
+    if (gWarpCheckpoint.courseNum != 0 && gSavedCourseNum == currCourseNum
         && gWarpCheckpoint.actNum == gCurrActNum) {
         warpNode->destLevel = gWarpCheckpoint.levelID;
         warpNode->destArea = gWarpCheckpoint.areaNum;
@@ -632,7 +617,7 @@ s32 check_warp_checkpoint(struct WarpNode *warpNode) {
         isWarpCheckpointActive = TRUE;
     } else {
         // Disable the warp checkpoint just incase the other 2 conditions failed?
-        gWarpCheckpoint.courseNum = COURSE_NONE;
+        gWarpCheckpoint.courseNum = 0;
     }
 
     return isWarpCheckpointActive;

@@ -44,42 +44,42 @@ void unagi_act_0(void) {
 
 void unagi_act_1_4(s32 arg0) {
     if (o->oSoundStateID == 3) {
-        if (cur_obj_check_anim_frame(30)) {
+        if (obj_check_anim_frame(30)) {
             o->oForwardVel = 40.0f;
         }
     } else {
-        if (cur_obj_check_if_at_animation_end()) {
+        if (func_8029F828()) {
             if (o->oAction != arg0 && (o->oPathedPrevWaypointFlags & 0xFF) >= 7) {
-                cur_obj_init_animation_with_sound(3);
+                set_obj_animation_and_sound_state(3);
             } else {
-                cur_obj_init_animation_with_sound(2);
+                set_obj_animation_and_sound_state(2);
             }
         }
     }
 
-    if (cur_obj_check_anim_frame(6)) {
-        cur_obj_play_sound_2(SOUND_GENERAL_MOVING_WATER);
+    if (obj_check_anim_frame(6)) {
+        PlaySound2(SOUND_GENERAL_MOVING_WATER);
     }
 
-    if (cur_obj_follow_path(0) == -1) {
+    if (obj_follow_path(0) == -1) {
         o->oAction = arg0;
     }
 
     o->oMoveAnglePitch = o->oFaceAnglePitch =
         approach_s16_symmetric(o->oMoveAnglePitch, o->oPathedTargetPitch, 50);
 
-    cur_obj_rotate_yaw_toward(o->oPathedTargetYaw, 120);
+    obj_rotate_yaw_toward(o->oPathedTargetYaw, 120);
     obj_roll_to_match_yaw_turn(o->oPathedTargetYaw, 0x2000, 100);
 
     obj_forward_vel_approach(10.0f, 0.2f);
-    cur_obj_set_pos_via_transform();
+    func_802A2A38();
 }
 
 void unagi_act_2(void) {
     o->oPathedPrevWaypoint = o->oPathedStartWaypoint;
     o->oPathedPrevWaypointFlags = 0;
 
-    cur_obj_set_pos_to_home();
+    obj_set_pos_to_home();
 
     o->oMoveAnglePitch = o->oFaceAnglePitch = 0;
     o->oMoveAngleYaw = o->oFaceAngleYaw = o->oUnagiUnk1B0;
@@ -94,35 +94,35 @@ void unagi_act_2(void) {
 
 void unagi_act_3(void) {
     if (o->oUnagiUnkF4 < 0.0f) {
-        cur_obj_init_animation_with_sound(6);
+        set_obj_animation_and_sound_state(6);
 
         if ((o->oUnagiUnkF4 += 10.0f) > 0.0f) {
             o->oUnagiUnkF4 = 0.0f;
         }
     } else {
         if (o->oUnagiUnkF4 == 0.0f) {
-            cur_obj_init_animation_with_sound(6);
+            set_obj_animation_and_sound_state(6);
 
             if (o->oTimer > 60 && o->oUnagiUnk1AC < 1000.0f) {
-                cur_obj_play_sound_2(SOUND_OBJ_EEL_2);
+                PlaySound2(SOUND_OBJ_EEL_2);
                 o->oUnagiUnkF8 = o->oUnagiUnk110 = 30.0f;
             } else {
                 o->oUnagiUnk110 = 0.0f;
             }
         } else if (o->oUnagiUnk110 > 0.0f) {
-            if (cur_obj_init_anim_and_check_if_end(5)) {
+            if (func_802F92B0(5)) {
                 o->oUnagiUnk110 = 0.0f;
             }
         } else if (o->oUnagiUnk110 == 0.0f) {
-            cur_obj_init_animation_with_sound(0);
-            if (cur_obj_check_if_at_animation_end()) {
+            set_obj_animation_and_sound_state(0);
+            if (func_8029F828()) {
                 if (o->oUnagiUnk1AC < 1000.0f) {
                     o->oAction = 4;
                     o->oForwardVel = o->oUnagiUnkF8;
-                    cur_obj_init_animation_with_sound(1);
+                    set_obj_animation_and_sound_state(1);
                 } else {
                     o->oUnagiUnk110 = -50.0f;
-                    cur_obj_init_animation_with_sound(4);
+                    set_obj_animation_and_sound_state(4);
                 }
             }
         }
@@ -176,7 +176,7 @@ void bhv_unagi_subobject_loop(void) {
     f32 val04;
 
     if (o->parentObj->oUnagiUnk1B2 == 0) {
-        obj_mark_for_deletion(o);
+        mark_object_for_deletion(o);
     } else {
         val04 = 300.0f * o->oBehParams2ndByte;
 
@@ -190,7 +190,7 @@ void bhv_unagi_subobject_loop(void) {
         if (o->oBehParams2ndByte == -4) {
             if (o->parentObj->oAnimState != 0 && o->oDistanceToMario < 150.0f) {
                 o->oBehParams = o->parentObj->oBehParams;
-                spawn_default_star(6833.0f, -3654.0f, 2230.0f);
+                create_star(6833.0f, -3654.0f, 2230.0f);
                 o->parentObj->oAnimState = 0;
             }
         } else {

@@ -2,14 +2,9 @@
 #include "osContInternal.h"
 #include <macros.h>
 
-#ifndef AVOID_UB
 OSContPackedStruct D_80365CE0[7];
 UNUSED static u32 unused; // padding between these two variables
 u32 D_80365D1C;
-#else
-// Reordered gcc vars above will disturb the aliasing done to access all 8 members of this array, hence AVOID_UB.
-OSContPackedStruct D_80365CE0[8];
-#endif
 
 extern u8 D_80365D20;
 extern u8 _osCont_numControllers;
@@ -41,8 +36,8 @@ void osContGetReadData(OSContPad *pad) {
     spc = &D_80365CE0[0].read;
     for (i = 0; i < _osCont_numControllers; i++, spc++, pad++) {
         sp4 = *spc;
-        pad->errno = (sp4.unk02 & 0xc0) >> 4;
-        if (pad->errno == 0) {
+        pad->errnum = (sp4.unk02 & 0xc0) >> 4;
+        if (pad->errnum == 0) {
             pad->button = sp4.button;
             pad->stick_x = sp4.rawStickX;
             pad->stick_y = sp4.rawStickY;
@@ -57,7 +52,6 @@ void __osPackReadData() {
     for (i = 0; i < 0x10; i++) {
         *((u32 *) &D_80365CE0 + i) = 0;
     }
-
     D_80365D1C = 1;
     sp4.unk00 = 255;
     sp4.unk01 = 1;

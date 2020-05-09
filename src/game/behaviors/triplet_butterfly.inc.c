@@ -32,7 +32,7 @@ static void triplet_butterfly_act_init(void) {
                 spawn_object_relative(i, 0, 0, 0, o, MODEL_BUTTERFLY, bhvTripletButterfly);
             }
 
-            o->oTripletButterflySelectedButterfly = random_u16() % 3;
+            o->oTripletButterflySelectedButterfly = RandomU16() % 3;
         }
 
         //! TODO: Describe this glitch
@@ -49,17 +49,17 @@ static void triplet_butterfly_act_init(void) {
         o->oMoveAngleYaw = (s32)(o->oTripletButterflyBaseYaw + random_linear_offset(0, 0x5555));
         o->oTripletButterflySpeed = random_linear_offset(15, 15);
 
-        cur_obj_unhide();
+        obj_unhide();
     }
 }
 
 static void triplet_butterfly_act_wander(void) {
     if (o->oDistanceToMario > 1500.0f) {
-        obj_mark_for_deletion(o);
+        mark_object_for_deletion(o);
     } else {
         approach_f32_ptr(&o->oTripletButterflySpeed, 8.0f, 0.5f);
         if (o->oTimer < 60) {
-            o->oTripletButterflyTargetYaw = cur_obj_angle_to_home();
+            o->oTripletButterflyTargetYaw = obj_angle_to_home();
         } else {
             o->oTripletButterflyTargetYaw = (s32) o->oTripletButterflyBaseYaw;
 
@@ -81,7 +81,7 @@ static void triplet_butterfly_act_wander(void) {
         }
 
         obj_move_pitch_approach(o->oTripletButterflyTargetPitch, 400);
-        cur_obj_rotate_yaw_toward(o->oTripletButterflyTargetYaw, random_linear_offset(400, 800));
+        obj_rotate_yaw_toward(o->oTripletButterflyTargetYaw, random_linear_offset(400, 800));
     }
 }
 
@@ -90,7 +90,7 @@ static void triplet_butterfly_act_activate(void) {
         if (o->oTripletButterflyModel == 0) {
             spawn_object_relative_with_scale(0, 0, -40, 0, 1.5f, o, MODEL_SMOKE, bhvWhitePuffSmoke2);
             o->oTripletButterflyModel = sTripletButterflyActivationData[o->oTripletButterflyType].model;
-            cur_obj_set_model(o->oTripletButterflyModel);
+            obj_set_model(o->oTripletButterflyModel);
             obj_set_billboard(o);
             o->oTripletButterflyScale = 0.0f;
             o->oHomeY = o->oPosY;
@@ -99,7 +99,7 @@ static void triplet_butterfly_act_activate(void) {
             if (o->oTripletButterflyType != TRIPLET_BUTTERFLY_TYPE_EXPLODES) {
                 spawn_object(o, o->oTripletButterflyModel,
                              sTripletButterflyActivationData[o->oTripletButterflyType].behavior);
-                obj_mark_for_deletion(o);
+                mark_object_for_deletion(o);
             } else {
                 o->oAction = TRIPLET_BUTTERFLY_ACT_EXPLODE;
                 o->oWallHitboxRadius = 100.0f;
@@ -123,7 +123,7 @@ static void triplet_butterfly_act_explode(void) {
     if (o->oAction == -1 || (o->oMoveFlags & 0x00000200) || o->oTimer >= 158) {
         o->oPosY += o->oGraphYOffset;
         spawn_object(o, MODEL_EXPLOSION, bhvExplosion);
-        obj_mark_for_deletion(o);
+        mark_object_for_deletion(o);
     } else {
         if (o->oTimer > 120) {
             scaleIncrease = 0.04f * coss(o->oTripletButterflyScalePhase);
@@ -138,13 +138,13 @@ static void triplet_butterfly_act_explode(void) {
         }
 
         approach_f32_ptr(&o->oTripletButterflySpeed, 20.0f, 1.0f);
-        cur_obj_rotate_yaw_toward(o->oAngleToMario, 800);
+        obj_rotate_yaw_toward(o->oAngleToMario, 800);
         obj_turn_pitch_toward_mario(-100.0f, 800);
     }
 }
 
 void bhv_triplet_butterfly_update(void) {
-    cur_obj_update_floor_and_walls();
+    obj_update_floor_and_walls();
 
     switch (o->oAction) {
         case TRIPLET_BUTTERFLY_ACT_INIT:
@@ -161,7 +161,7 @@ void bhv_triplet_butterfly_update(void) {
             break;
     }
 
-    cur_obj_scale(o->oTripletButterflyScale);
+    obj_scale(o->oTripletButterflyScale);
     obj_compute_vel_from_move_pitch(o->oTripletButterflySpeed);
-    cur_obj_move_standard(78);
+    obj_move_standard(78);
 }

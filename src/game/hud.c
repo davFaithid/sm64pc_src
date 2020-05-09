@@ -1,7 +1,9 @@
 #include <ultra64.h>
 
 #include "sm64.h"
-#include "game_init.h"
+#include "gfx_dimensions.h"
+#include "display.h"
+#include "game.h"
 #include "level_update.h"
 #include "camera.h"
 #include "print.h"
@@ -25,7 +27,7 @@ struct PowerMeterHUD {
     f32 unused;
 };
 
-struct UnusedHUDStruct {
+struct UnusedStruct803314F0 {
     u32 unused1;
     u16 unused2;
     u16 unused3;
@@ -51,7 +53,7 @@ static struct PowerMeterHUD sPowerMeterHUD = {
 // when the power meter is hidden.
 s32 sPowerMeterVisibleTimer = 0;
 
-static struct UnusedHUDStruct sUnusedHUDValues = { 0x00, 0x0A, 0x00 };
+static struct UnusedStruct803314F0 unused803314F0 = { 0x00000000, 0x000A, 0x0000 };
 
 static struct CameraHUD sCameraHUD = { CAM_STATUS_NONE };
 
@@ -208,7 +210,7 @@ void handle_power_meter_actions(s16 numHealthWedges) {
     // Update to match health value
     sPowerMeterStoredHealth = numHealthWedges;
 
-    // If Mario is swimming, keep power meter visible
+    // If mario is swimming, keep showing power meter
     if (gPlayerCameraState->action & ACT_FLAG_SWIMMING) {
         if (sPowerMeterHUD.animation == POWER_METER_HIDDEN
             || sPowerMeterHUD.animation == POWER_METER_EMPHASIZED) {
@@ -264,9 +266,9 @@ void render_hud_power_meter(void) {
  * Renders the amount of lives Mario has.
  */
 void render_hud_mario_lives(void) {
-    print_text(22, HUD_TOP_Y, ","); // 'Mario Head' glyph
-    print_text(38, HUD_TOP_Y, "*"); // 'X' glyph
-    print_text_fmt_int(54, HUD_TOP_Y, "%d", gHudDisplay.lives);
+    print_text(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(22), HUD_TOP_Y, ","); // 'Mario Head' glyph
+    print_text(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(38), HUD_TOP_Y, "*"); // 'X' glyph
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(54), HUD_TOP_Y, "%d", gHudDisplay.lives);
 }
 
 /**
@@ -279,9 +281,9 @@ void render_hud_coins(void) {
 }
 
 #ifdef VERSION_JP
-#define HUD_STARS_X 247
+#define HUD_STARS_X 73
 #else
-#define HUD_STARS_X 242
+#define HUD_STARS_X 78
 #endif
 
 /**
@@ -299,11 +301,12 @@ void render_hud_stars(void) {
         showX = 1;
     }
 
-    print_text(HUD_STARS_X, HUD_TOP_Y, "-"); // 'Star' glyph
+    print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(HUD_STARS_X), HUD_TOP_Y, "-"); // 'Star' glyph
     if (showX == 1) {
-        print_text((HUD_STARS_X + 16), HUD_TOP_Y, "*"); // 'X' glyph
+        print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(HUD_STARS_X) + 16, HUD_TOP_Y, "*"); // 'X' glyph
     }
-    print_text_fmt_int(((showX * 14) + (HUD_STARS_X + 16)), HUD_TOP_Y, "%d", gHudDisplay.stars);
+    print_text_fmt_int((showX * 14) + GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(HUD_STARS_X - 16),
+                       HUD_TOP_Y, "%d", gHudDisplay.stars);
 }
 
 /**
@@ -333,13 +336,13 @@ void render_hud_timer(void) {
 #ifdef VERSION_EU
     switch (eu_get_language()) {
         case LANGUAGE_ENGLISH:
-            print_text(170, 185, "TIME");
+            print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 185, "TIME");
             break;
         case LANGUAGE_FRENCH:
-            print_text(165, 185, "TEMPS");
+            print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(155), 185, "TEMPS");
             break;
         case LANGUAGE_GERMAN:
-            print_text(170, 185, "ZEIT");
+            print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 185, "ZEIT");
             break;
     }
 #endif
@@ -348,14 +351,14 @@ void render_hud_timer(void) {
 
     timerFracSecs = ((timerValFrames - (timerMins * 1800) - (timerSecs * 30)) & 0xFFFF) / 3;
 #ifndef VERSION_EU
-    print_text(170, 185, "TIME");
+    print_text(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(150), 185, "TIME");
 #endif
-    print_text_fmt_int(229, 185, "%0d", timerMins);
-    print_text_fmt_int(249, 185, "%02d", timerSecs);
-    print_text_fmt_int(283, 185, "%d", timerFracSecs);
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(91), 185, "%0d", timerMins);
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(71), 185, "%02d", timerSecs);
+    print_text_fmt_int(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(37), 185, "%d", timerFracSecs);
     gSPDisplayList(gDisplayListHead++, dl_hud_img_begin);
-    render_hud_tex_lut(239, 32, (*hudLUT)[GLYPH_APOSTROPHE]);
-    render_hud_tex_lut(274, 32, (*hudLUT)[GLYPH_DOUBLE_QUOTE]);
+    render_hud_tex_lut(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(81), 32, (*hudLUT)[GLYPH_APOSTROPHE]);
+    render_hud_tex_lut(GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(46), 32, (*hudLUT)[GLYPH_DOUBLE_QUOTE]);
     gSPDisplayList(gDisplayListHead++, dl_hud_img_end);
 }
 
@@ -377,7 +380,7 @@ void render_hud_camera_status(void) {
     s32 y;
 
     cameraLUT = segmented_to_virtual(&main_hud_camera_lut);
-    x = 266;
+    x = GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(54);
     y = 205;
 
     if (sCameraHUD.status == CAM_STATUS_NONE) {
@@ -430,16 +433,16 @@ void render_hud(void) {
     } else {
 #ifdef VERSION_EU
         // basically create_dl_ortho_matrix but guOrtho screen width is different
-
         mtx = alloc_display_list(sizeof(*mtx));
         if (mtx == NULL) {
             return;
         }
         create_dl_identity_matrix();
-        guOrtho(mtx, -16.0f, SCREEN_WIDTH + 16, 0, SCREEN_HEIGHT, -10.0f, 10.0f, 1.0f);
-        gSPPerspNormalize(gDisplayListHead++, 0xFFFF);
-        gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(mtx),
+        guOrtho(mtx, -16.0f, 336.0f, 0, 240.0f, -10.0f, 10.0f, 1.0f);
+        gMoveWd(gDisplayListHead++, 0xE, 0, 0xFFFF);
+        gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(mtx), 
                 G_MTX_PROJECTION | G_MTX_MUL | G_MTX_NOPUSH);
+
 #else
         create_dl_ortho_matrix();
 #endif

@@ -1,13 +1,15 @@
 #include <ultra64.h>
 
 #include "sm64.h"
+#include "gfx_dimensions.h"
 #include "main.h"
+#include "display.h"
 #include "print.h"
 #include "engine/math_util.h"
 #include "area.h"
 #include "shadow.h"
 #include "memory.h"
-#include "game_init.h"
+#include "game.h"
 #include "rendering_graph_node.h"
 
 /**
@@ -156,7 +158,7 @@ static void geo_process_master_list_sub(struct GraphNodeMasterList *node) {
             gDPSetRenderMode(gDisplayListHead++, modeList->modes[i], mode2List->modes[i]);
             while (currList != NULL) {
                 gSPMatrix(gDisplayListHead++, VIRTUAL_TO_PHYSICAL(currList->transform),
-                          G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
+                          G_MTX_MODELVIEW | G_MTX_MUL | G_MTX_LOAD);
                 gSPDisplayList(gDisplayListHead++, currList->displayList);
                 currList = currList->next;
             }
@@ -505,13 +507,18 @@ static void geo_process_background(struct GraphNodeBackground *node) {
     if (list != 0) {
         geo_append_display_list((void *) VIRTUAL_TO_PHYSICAL(list), node->fnNode.node.flags >> 8);
     } else if (gCurGraphNodeMasterList != NULL) {
+#ifdef TARGET_N64
         Gfx *gfxStart = alloc_display_list(sizeof(Gfx) * 7);
+#else
+        Gfx *gfxStart = alloc_display_list(sizeof(Gfx) * 8);
+#endif
         Gfx *gfx = gfxStart;
 
         gDPPipeSync(gfx++);
         gDPSetCycleType(gfx++, G_CYC_FILL);
         gDPSetFillColor(gfx++, node->background);
-        gDPFillRectangle(gfx++, 0, BORDER_HEIGHT, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1 - BORDER_HEIGHT);
+        gDPFillRectangle(gfx++, GFX_DIMENSIONS_RECT_FROM_LEFT_EDGE(0), BORDER_HEIGHT,
+        GFX_DIMENSIONS_RECT_FROM_RIGHT_EDGE(0) - 1, SCREEN_HEIGHT - BORDER_HEIGHT - 1);
         gDPPipeSync(gfx++);
         gDPSetCycleType(gfx++, G_CYC_1CYCLE);
         gSPEndDisplayList(gfx++);
@@ -751,6 +758,10 @@ static int obj_is_in_view(struct GraphNodeObject *node, Mat4 matrix) {
     // the amount of units between the center of the screen and the horizontal edge
     // given the distance from the object to the camera.
 
+#ifndef TARGET_N64
+    hScreenEdge *= GFX_DIMENSIONS_ASPECT_RATIO;
+#endif
+
     if (geo != NULL && geo->type == GRAPH_NODE_TYPE_CULLING_RADIUS) {
         cullingRadius =
             (f32)((struct GraphNodeCullingRadius *) geo)->cullingRadius; //! Why is there a f32 cast?
@@ -792,7 +803,7 @@ static void geo_process_object(struct Object *node) {
         if (node->header.gfx.throwMatrix != NULL) {
             mtxf_mul(gMatStack[gMatStackIndex + 1], (void *) node->header.gfx.throwMatrix,
                      gMatStack[gMatStackIndex]);
-        } else if (node->header.gfx.node.flags & GRAPH_RENDER_BILLBOARD) {
+        } else if (node->header.gfx.node.flags & 4) {
             mtxf_billboard(gMatStack[gMatStackIndex + 1], gMatStack[gMatStackIndex],
                            node->header.gfx.pos, gCurGraphNodeCamera->roll);
         } else {

@@ -1,10 +1,10 @@
 // butterfly.c.inc
 
 void bhv_butterfly_init(void) {
-    cur_obj_init_animation(1);
+    SetObjAnimation(1);
 
-    o->oButterflyYPhase = random_float() * 100.0f;
-    o->header.gfx.unk38.animFrame = random_float() * 7.0f;
+    o->oButterflyYPhase = RandomFloat() * 100.0f;
+    o->header.gfx.unk38.animFrame = RandomFloat() * 7.0f;
     o->oHomeX = o->oPosX;
     o->oHomeY = o->oPosY;
     o->oHomeZ = o->oPosZ;
@@ -12,7 +12,7 @@ void bhv_butterfly_init(void) {
 
 // sp28 = speed
 
-void butterfly_step(s32 speed) {
+void ButterflyStep(s32 speed) {
     struct FloorGeometry *sp24;
     s16 yaw = o->oMoveAngleYaw;
     s16 pitch = o->oMoveAnglePitch;
@@ -27,7 +27,7 @@ void butterfly_step(s32 speed) {
     o->oPosZ += o->oVelZ;
 
     if (o->oAction == BUTTERFLY_ACT_FOLLOW_MARIO)
-        o->oPosY -= o->oVelY + coss((s32)(yPhase * 655.36)) * 20.0f / 4;
+        o->oPosY -= o->oVelY + coss((s32)(yPhase * 655.36)) * 20.0f / 4.0f;
     else
         o->oPosY -= o->oVelY;
 
@@ -41,7 +41,7 @@ void butterfly_step(s32 speed) {
         o->oButterflyYPhase = 0;
 }
 
-void butterfly_calculate_angle(void) {
+void CalculateButterflyAngle(void) {
     gMarioObject->oPosX += 5 * o->oButterflyYPhase / 4;
     gMarioObject->oPosZ += 5 * o->oButterflyYPhase / 4;
     obj_turn_toward_object(o, gMarioObject, 16, 0x300);
@@ -53,25 +53,25 @@ void butterfly_calculate_angle(void) {
     gMarioObject->oPosY -= (5 * o->oButterflyYPhase + 0x100) / 4;
 }
 
-void butterfly_act_rest(void) {
+void ButterflyRestingLoop(void) {
     if (is_point_within_radius_of_mario(o->oPosX, o->oPosY, o->oPosZ, 1000)) {
-        cur_obj_init_animation(0);
+        SetObjAnimation(0);
 
         o->oAction = BUTTERFLY_ACT_FOLLOW_MARIO;
         o->oMoveAngleYaw = gMarioObject->header.gfx.angle[1];
     }
 }
 
-void butterfly_act_follow_mario(void) {
-    butterfly_calculate_angle();
+void ButterflyFollowMarioLoop(void) {
+    CalculateButterflyAngle();
 
-    butterfly_step(7);
+    ButterflyStep(7);
 
     if (!is_point_within_radius_of_mario(o->oHomeX, o->oHomeY, o->oHomeZ, 1200))
         o->oAction = BUTTERFLY_ACT_RETURN_HOME;
 }
 
-void butterfly_act_return_home(void) {
+void ButterflyReturnHomeLoop(void) {
     f32 homeDistX = o->oHomeX - o->oPosX;
     f32 homeDistY = o->oHomeY - o->oPosY;
     f32 homeDistZ = o->oHomeZ - o->oPosZ;
@@ -81,10 +81,10 @@ void butterfly_act_return_home(void) {
     o->oMoveAngleYaw = approach_s16_symmetric(o->oMoveAngleYaw, hAngleToHome, 0x800);
     o->oMoveAnglePitch = approach_s16_symmetric(o->oMoveAnglePitch, vAngleToHome, 0x50);
 
-    butterfly_step(7);
+    ButterflyStep(7);
 
     if (homeDistX * homeDistX + homeDistY * homeDistY + homeDistZ * homeDistZ < 144.0f) {
-        cur_obj_init_animation(1);
+        SetObjAnimation(1);
 
         o->oAction = BUTTERFLY_ACT_RESTING;
         o->oPosX = o->oHomeX;
@@ -96,15 +96,15 @@ void butterfly_act_return_home(void) {
 void bhv_butterfly_loop(void) {
     switch (o->oAction) {
         case BUTTERFLY_ACT_RESTING:
-            butterfly_act_rest();
+            ButterflyRestingLoop();
             break;
 
         case BUTTERFLY_ACT_FOLLOW_MARIO:
-            butterfly_act_follow_mario();
+            ButterflyFollowMarioLoop();
             break;
 
         case BUTTERFLY_ACT_RETURN_HOME:
-            butterfly_act_return_home();
+            ButterflyReturnHomeLoop();
             break;
     }
 

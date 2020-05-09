@@ -34,13 +34,13 @@ static void fly_guy_act_idle(void) {
         if (o->oDistanceToMario >= 25000.0f || o->oDistanceToMario < 2000.0f) {
             // Turn toward home or Mario
             obj_face_yaw_approach(o->oAngleToMario, 0x300);
-            if (cur_obj_rotate_yaw_toward(o->oAngleToMario, 0x300)) {
+            if (obj_rotate_yaw_toward(o->oAngleToMario, 0x300)) {
                 o->oAction = FLY_GUY_ACT_APPROACH_MARIO;
             }
         } else {
             // Randomly enter the approach mario action - but this doesn't
             // really do anything since we come right back to idle
-            if (o->oFlyGuyIdleTimer >= 3 || o->oFlyGuyIdleTimer == (random_u16() & 1) + 2) {
+            if (o->oFlyGuyIdleTimer >= 3 || o->oFlyGuyIdleTimer == (RandomU16() & 1) + 2) {
                 o->oFlyGuyIdleTimer = 0;
                 o->oAction = FLY_GUY_ACT_APPROACH_MARIO;
             } else {
@@ -62,14 +62,14 @@ static void fly_guy_act_approach_mario(void) {
 
         // Turn toward home or Mario
         obj_face_yaw_approach(o->oAngleToMario, 0x400);
-        cur_obj_rotate_yaw_toward(o->oAngleToMario, 0x200);
+        obj_rotate_yaw_toward(o->oAngleToMario, 0x200);
 
         // If facing toward mario and we are either near mario laterally or
         // far above him
         if (abs_angle_diff(o->oAngleToMario, o->oFaceAngleYaw) < 0x2000) {
             if (o->oPosY - gMarioObject->oPosY > 400.0f || o->oDistanceToMario < 400.0f) {
                 // Either shoot fire or lunge
-                if (o->oBehParams2ndByte != 0 && random_u16() % 2) {
+                if (o->oBehParams2ndByte != 0 && RandomU16() % 2) {
                     o->oAction = FLY_GUY_ACT_SHOOT_FIRE;
                     o->oFlyGuyScaleVel = 0.06f;
                 } else {
@@ -97,11 +97,11 @@ static void fly_guy_act_lunge(void) {
 
         o->oVelY += o->oFlyGuyLungeYDecel;
 
-        cur_obj_rotate_yaw_toward(o->oFaceAngleYaw, 0x800);
+        obj_rotate_yaw_toward(o->oFaceAngleYaw, 0x800);
         obj_face_pitch_approach(o->oFlyGuyLungeTargetPitch, 0x400);
 
         // Range [-0x1000, 0x2000]
-        o->oFlyGuyTargetRoll = 0x1000 * (s16)(random_float() * 3.0f) - 0x1000;
+        o->oFlyGuyTargetRoll = 0x1000 * (s16)(RandomFloat() * 3.0f) - 0x1000;
         o->oTimer = 0;
     } else {
         // Twirl back upward
@@ -149,7 +149,7 @@ static void fly_guy_act_shoot_fire(void) {
             } else {
                 // We have reached below scale 1.2 in the shrinking portion
                 s16 fireMovePitch = obj_turn_pitch_toward_mario(0.0f, 0);
-                cur_obj_play_sound_2(SOUND_OBJ_FLAME_BLOWN);
+                PlaySound2(SOUND_OBJ_FLAME_BLOWN);
                 clamp_s16(&fireMovePitch, 0x800, 0x3000);
 
                 obj_spit_fire(
@@ -179,12 +179,12 @@ void bhv_fly_guy_update(void) {
     if (!(o->activeFlags & ACTIVE_FLAG_IN_DIFFERENT_ROOM)) {
         o->oDeathSound = SOUND_OBJ_KOOPA_FLYGUY_DEATH;
 
-        cur_obj_scale(o->header.gfx.scale[0]);
+        obj_scale(o->header.gfx.scale[0]);
         treat_far_home_as_mario(2000.0f);
-        cur_obj_update_floor_and_walls();
+        obj_update_floor_and_walls();
 
         if (o->oMoveFlags & OBJ_MOVE_HIT_WALL) {
-            o->oMoveAngleYaw = cur_obj_reflect_move_angle_off_wall();
+            o->oMoveAngleYaw = obj_reflect_move_angle_off_wall();
         } else if (o->oMoveFlags & OBJ_MOVE_MASK_IN_WATER) {
             o->oVelY = 6.0f;
         }
@@ -208,7 +208,7 @@ void bhv_fly_guy_update(void) {
                 break;
         }
 
-        cur_obj_move_standard(78);
+        obj_move_standard(78);
         obj_check_attacks(&sFlyGuyHitbox, o->oAction);
     }
 }

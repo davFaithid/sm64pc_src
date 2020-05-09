@@ -1,7 +1,8 @@
 #include <ultra64.h>
 
 #include "sm64.h"
-#include "game_init.h"
+#include "gfx_dimensions.h"
+#include "game.h"
 #include "mario.h"
 #include "memory.h"
 #include "save_file.h"
@@ -27,7 +28,7 @@ struct TextLabel {
  * Stores the text to be rendered on screen
  * and how they are to be rendered.
  */
-struct TextLabel *sTextLabels[52];
+struct TextLabel *sTextLabels[256];
 s16 sTextLabelsCount = 0;
 
 /**
@@ -83,7 +84,9 @@ void format_integer(s32 n, s32 base, char *dest, s32 *totalLength, u8 width, s8 
 
         // Add leading pad to fit width.
         if (width > numDigits) {
-            for (len = 0; len < width - numDigits; len++) dest[len] = pad;
+            for (len = 0; len < width - numDigits; len++) {
+                dest[len] = pad;
+            }
 
             // Needs 1 length to print negative prefix.
             if (negative == TRUE) {
@@ -115,7 +118,9 @@ void format_integer(s32 n, s32 base, char *dest, s32 *totalLength, u8 width, s8 
     {
         numDigits = 1;
         if (width > numDigits) {
-            for (len = 0; len < width - numDigits; len++) dest[len] = pad;
+            for (len = 0; len < width - numDigits; len++) {
+                dest[len] = pad;
+            }
         }
         dest[len] = '0';
     }
@@ -365,6 +370,7 @@ void add_glyph_texture(s8 glyphIndex) {
     gSPDisplayList(gDisplayListHead++, dl_hud_img_load_tex_block);
 }
 
+#ifdef TARGET_N64
 /**
  * Clips textrect into the boundaries defined.
  */
@@ -385,6 +391,7 @@ void clip_to_bounds(s32 *x, s32 *y) {
         *y = TEXRECT_MAX_Y;
     }
 }
+#endif
 
 /**
  * Renders the glyph that's set at the given position.
@@ -395,7 +402,9 @@ void render_textrect(s32 x, s32 y, s32 pos) {
     s32 rectX;
     s32 rectY;
 
+#ifdef TARGET_N64
     clip_to_bounds(&rectBaseX, &rectBaseY);
+#endif
     rectX = rectBaseX;
     rectY = rectBaseY;
     gSPTextureRectangle(gDisplayListHead++, rectX << 2, rectY << 2, (rectX + 15) << 2,

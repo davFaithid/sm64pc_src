@@ -27,25 +27,25 @@
 
 #define WARP_OP_TRIGGERS_LEVEL_SELECT 0x10
 
-#define MARIO_SPAWN_UNKNOWN_01     0x01
-#define MARIO_SPAWN_UNKNOWN_02     0x02
-#define MARIO_SPAWN_UNKNOWN_03     0x03
-#define MARIO_SPAWN_UNKNOWN_04     0x04
-#define MARIO_SPAWN_UNKNOWN_10     0x10
-#define MARIO_SPAWN_UNKNOWN_11     0x11
-#define MARIO_SPAWN_UNKNOWN_12     0x12
-#define MARIO_SPAWN_UNKNOWN_13     0x13
-#define MARIO_SPAWN_UNKNOWN_14     0x14
-#define MARIO_SPAWN_DEATH          0x15
-#define MARIO_SPAWN_UNKNOWN_16     0x16
-#define MARIO_SPAWN_UNKNOWN_17     0x17
-#define MARIO_SPAWN_UNKNOWN_20     0x20
-#define MARIO_SPAWN_PAINTING_DEATH 0x21
-#define MARIO_SPAWN_UNKNOWN_22     0x22
-#define MARIO_SPAWN_UNKNOWN_23     0x23
-#define MARIO_SPAWN_UNKNOWN_24     0x24
-#define MARIO_SPAWN_UNKNOWN_25     0x25
-#define MARIO_SPAWN_UNKNOWN_27     0x27
+#define MARIO_SPAWN_UNKNOWN_01 0x01
+#define MARIO_SPAWN_UNKNOWN_02 0x02
+#define MARIO_SPAWN_UNKNOWN_03 0x03
+#define MARIO_SPAWN_UNKNOWN_04 0x04
+#define MARIO_SPAWN_UNKNOWN_10 0x10
+#define MARIO_SPAWN_UNKNOWN_11 0x11
+#define MARIO_SPAWN_UNKNOWN_12 0x12
+#define MARIO_SPAWN_UNKNOWN_13 0x13
+#define MARIO_SPAWN_UNKNOWN_14 0x14
+#define MARIO_SPAWN_UNKNOWN_15 0x15
+#define MARIO_SPAWN_UNKNOWN_16 0x16
+#define MARIO_SPAWN_UNKNOWN_17 0x17
+#define MARIO_SPAWN_UNKNOWN_20 0x20
+#define MARIO_SPAWN_UNKNOWN_21 0x21
+#define MARIO_SPAWN_UNKNOWN_22 0x22
+#define MARIO_SPAWN_UNKNOWN_23 0x23
+#define MARIO_SPAWN_UNKNOWN_24 0x24
+#define MARIO_SPAWN_UNKNOWN_25 0x25
+#define MARIO_SPAWN_UNKNOWN_27 0x27
 
 
 struct CreditsEntry
@@ -116,8 +116,8 @@ enum HUDDisplayFlag {
 
 
 u16 level_control_timer(s32 timerOp);
-void fade_into_special_warp(u32 arg, u32 color);
-void load_level_init_text(u32 arg);
+void func_80249788(u32 arg, u32 color);
+void func_8024980C(u32 arg);
 s16 level_trigger_warp(struct MarioState *m, s32 warpOp);
 void level_set_transition(s16 length, void (*updateFunction)(s16 *));
 

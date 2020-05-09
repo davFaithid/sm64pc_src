@@ -1,5 +1,7 @@
 #include "libultra_internal.h"
 
+extern OSThread *D_803348A0;
+
 s32 osSendMesg(OSMesgQueue *mq, OSMesg msg, s32 flag) {
     register u32 int_disabled;
     register s32 index;

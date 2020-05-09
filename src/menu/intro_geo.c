@@ -7,6 +7,8 @@
 #include "game/segment7.h"
 #include "intro_geo.h"
 
+#include "gfx_dimensions.h"
+
 // frame counts for the zoom in, hold, and zoom out of title model
 #define INTRO_STEPS_ZOOM_IN 20
 #define INTRO_STEPS_HOLD_1 75
@@ -34,8 +36,8 @@ extern const u8 *const mario_title_texture_table[];
 extern const u8 *const game_over_texture_table[];
 
 // intro geo bss
-s32 gGameOverFrameCounter;
-s32 gGameOverTableIndex;
+int gGameOverFrameCounter;
+int gGameOverTableIndex;
 s16 gTitleZoomCounter;
 s32 gTitleFadeCounter;
 
@@ -77,7 +79,7 @@ s8 gameOverBackgroundTable[] = {
 s8 gameOverBackgroundFlipOrder[] = { 0x00, 0x01, 0x02, 0x03, 0x07, 0x0B,
                                      0x0a, 0x09, 0x08, 0x04, 0x05, 0x06 };
 
-Gfx *geo_title_screen(s32 sp50, struct GraphNode *sp54, UNUSED void *context) {
+Gfx *geo18_title_screen(u32 sp50, struct GraphNode *sp54, UNUSED void *context) {
     struct GraphNode *graphNode; // sp4c
     Gfx *displayList;            // sp48
     Gfx *displayListIter;        // sp44
@@ -127,7 +129,7 @@ Gfx *geo_title_screen(s32 sp50, struct GraphNode *sp54, UNUSED void *context) {
     return displayList;
 }
 
-Gfx *geo_fade_transition(s32 sp40, struct GraphNode *sp44, UNUSED void *context) {
+Gfx *geo18_fade_transition(u32 sp40, struct GraphNode *sp44, UNUSED void *context) {
     struct GraphNode *graphNode = sp44; // sp3c
     Gfx *displayList = NULL;            // sp38
     Gfx *displayListIter = NULL;        // sp34
@@ -161,17 +163,21 @@ Gfx *geo_fade_transition(s32 sp40, struct GraphNode *sp44, UNUSED void *context)
     return displayList;
 }
 
-Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
+Gfx *intro_backdrop_one_image(u32 index, s8 *backgroundTable) {
     Mtx *mtx;                         // sp5c
     Gfx *displayList;                 // sp58
     Gfx *displayListIter;             // sp54
     const u8 *const *vIntroBgTable;   // sp50
     s32 i;                            // sp4c
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	float x_ofs = (SCREEN_WIDTH/2)-(aspect*SCREEN_HEIGHT/2);
+	
     mtx = alloc_display_list(sizeof(*mtx));
     displayList = alloc_display_list(36 * sizeof(*displayList));
     displayListIter = displayList;
-    vIntroBgTable = segmented_to_virtual(introBackgroundTextureType[backgroundTable[index]]);
-    guTranslate(mtx, introBackgroundOffsetX[index], introBackgroundOffsetY[index], 0.0f);
+    vIntroBgTable = segmented_to_virtual(introBackgroundTextureType[backgroundTable[0]]);
+    guTranslate(mtx, ((index%num_tiles_h)*80)+x_ofs, (index/num_tiles_h)*80, 0.0f);
     gSPMatrix(displayListIter++, mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_PUSH);
     gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000118);
     for (i = 0; i < 4; ++i) {
@@ -184,7 +190,7 @@ Gfx *intro_backdrop_one_image(s32 index, s8 *backgroundTable) {
     return displayList;
 }
 
-Gfx *geo_intro_backdrop(s32 sp48, struct GraphNode *sp4c, UNUSED void *context) {
+Gfx *geo18_intro_backdrop(u32 sp48, struct GraphNode *sp4c, UNUSED void *context) {
     struct GraphNodeMore *graphNode; // sp44
     s32 index;                       // sp40
     s8 *backgroundTable;             // sp3c
@@ -196,13 +202,16 @@ Gfx *geo_intro_backdrop(s32 sp48, struct GraphNode *sp4c, UNUSED void *context) 
     backgroundTable = introBackgroundTables[index];
     displayList = NULL;
     displayListIter = NULL;
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	
     if (sp48 == 1) {
-        displayList = alloc_display_list(16 * sizeof(*displayList));
+        displayList = alloc_display_list(((num_tiles_h*3)+4) * sizeof(*displayList));
         displayListIter = displayList;
         graphNode->node.flags = (graphNode->node.flags & 0xFF) | 0x100;
         gSPDisplayList(displayListIter++, &dl_proj_mtx_fullscreen);
         gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000100);
-        for (i = 0; i < 12; ++i) {
+        for (i = 0; i < num_tiles_h*3; ++i) {
             gSPDisplayList(displayListIter++, intro_backdrop_one_image(i, backgroundTable));
         }
         gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000190);
@@ -211,7 +220,7 @@ Gfx *geo_intro_backdrop(s32 sp48, struct GraphNode *sp4c, UNUSED void *context) 
     return displayList;
 }
 
-Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) {
+Gfx *geo18_game_over_tile(u32 sp40, struct GraphNode *sp44, UNUSED void *context) {
     struct GraphNode *graphNode; // sp3c
     Gfx *displayList;            // sp38
     Gfx *displayListIter;        // sp34
@@ -220,6 +229,9 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
     graphNode = sp44;
     displayList = NULL;
     displayListIter = NULL;
+    f32 aspect = GFX_DIMENSIONS_ASPECT_RATIO;
+	int num_tiles_h = (((aspect*SCREEN_HEIGHT)+79)/80);
+	
     if (sp40 != 1) {
         gGameOverFrameCounter = 0;
         gGameOverTableIndex = -2;
@@ -227,7 +239,7 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
             gameOverBackgroundTable[i] = INTRO_BACKGROUND_GAME_OVER;
         }
     } else {
-        displayList = alloc_display_list(16 * sizeof(*displayList));
+        displayList = alloc_display_list(((num_tiles_h*3)+4) * sizeof(*displayList));
         displayListIter = displayList;
         if (gGameOverTableIndex == -2) {
             if (gGameOverFrameCounter == 180) {
@@ -248,7 +260,7 @@ Gfx *geo_game_over_tile(s32 sp40, struct GraphNode *sp44, UNUSED void *context) 
         graphNode->flags = (graphNode->flags & 0xFF) | 0x100;
         gSPDisplayList(displayListIter++, &dl_proj_mtx_fullscreen);
         gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000100);
-        for (j = 0; j < (s32) sizeof(gameOverBackgroundTable); ++j) {
+        for (j = 0; j < (s32) num_tiles_h*3; ++j) {
             gSPDisplayList(displayListIter++, intro_backdrop_one_image(j, gameOverBackgroundTable));
         }
         gSPDisplayList(displayListIter++, &title_screen_bg_dl_0A000190);

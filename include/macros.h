@@ -3,10 +3,6 @@
 
 #include "platform_info.h"
 
-#ifndef __sgi
-#define GLOBAL_ASM(...)
-#endif
-
 #if !defined(__sgi) && (!defined(NON_MATCHING) || !defined(AVOID_UB))
 // asm-process isn't supported outside of IDO, and undefined behavior causes
 // crashes.
@@ -46,6 +42,7 @@
 #define ALIGNED16
 #endif
 
+#ifdef TARGET_N64
 // convert a virtual address to physical.
 #define VIRTUAL_TO_PHYSICAL(addr)   ((uintptr_t)(addr) & 0x1FFFFFFF)
 
@@ -54,5 +51,11 @@
 
 // another way of converting virtual to physical
 #define VIRTUAL_TO_PHYSICAL2(addr)  ((u8 *)(addr) - 0x80000000U)
+#else
+// no conversion for pc port other than cast
+#define VIRTUAL_TO_PHYSICAL(addr)   ((uintptr_t)(addr))
+#define PHYSICAL_TO_VIRTUAL(addr)   ((uintptr_t)(addr))
+#define VIRTUAL_TO_PHYSICAL2(addr)  ((void *)(addr))
+#endif
 
 #endif

@@ -34,7 +34,7 @@ void bhv_ttc_elevator_update(void) {
     if (gTTCSpeedSetting == TTC_SPEED_RANDOM) {
         // Occasionally stop for 5 frames then change direction
         if (o->oTimer > o->oTTCElevatorMoveTime) {
-            o->oTTCElevatorDir = random_sign();
+            o->oTTCElevatorDir = RandomSign();
             o->oTTCElevatorMoveTime = random_mod_offset(30, 30, 6);
             o->oTimer = 0;
         } else if (o->oTimer < 5) {
@@ -43,7 +43,7 @@ void bhv_ttc_elevator_update(void) {
     }
 
     // This is basically equivalent to posY += velY
-    cur_obj_move_using_fvel_and_gravity();
+    obj_move_using_fvel_and_gravity();
 
     // Flip directions if the elevator tries to run away
     if (clamp_f32(&o->oPosY, o->oHomeY, o->oTTCElevatorPeakY)) {

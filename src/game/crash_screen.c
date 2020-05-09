@@ -4,11 +4,37 @@
 
 #include "sm64.h"
 
-#if defined(VERSION_EU) || defined(VERSION_SH)
+#if defined(TARGET_N64) && defined(VERSION_EU)
 
 s32 _Printf(char *(*prout)(char *, const char *, size_t), char *dst, const char *fmt, va_list args);
 
-u8 gCrashScreenCharToGlyph[128] = {
+const char *const gCauseDesc[18] = {
+    "Interrupt",
+    "TLB modification",
+    "TLB exception on load",
+    "TLB exception on store",
+    "Address error on load",
+    "Address error on store",
+    "Bus error on inst.",
+    "Bus error on data",
+    "System call exception",
+    "Breakpoint exception",
+    "Reserved instruction",
+    "Coprocessor unusable",
+    "Arithmetic overflow",
+    "Trap exception",
+    "Virtual coherency on inst.",
+    "Floating point exception",
+    "Watchpoint exception",
+    "Virtual coherency on data",
+};
+
+const char *const gFpcsrDesc[6] = {
+    "Unimplemented operation", "Invalid operation", "Division by zero", "Overflow", "Underflow",
+    "Inexact operation",
+};
+
+const u8 gCrashScreenCharToGlyph[128] = {
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
     -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 41, -1, -1, -1, 43, -1, -1, 37, 38, -1, 42,
     -1, 39, 44, -1, 0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  36, -1, -1, -1, -1, 40, -1, 10,
@@ -18,7 +44,7 @@ u8 gCrashScreenCharToGlyph[128] = {
 };
 
 // Bit-compressed font. '#' = 1, '.' = 0
-u32 gCrashScreenFont[7 * 9 + 1] = {
+const u32 gCrashScreenFont[7 * 9] = {
     0x70871c30, // .###.. ..#... .###.. .###.. ..##.. ..
     0x8988a250, // #...#. .##... #...#. #...#. .#.#.. ..
     0x88808290, // #...#. ..#... ....#. ....#. #..#.. ..
@@ -90,37 +116,7 @@ u32 gCrashScreenFont[7 * 9 + 1] = {
     0x20821000, // ..#... ..#... ..#... .#.... ...... ..
     0x00022200, // ...... ...... ..#... #...#. ...... ..
     0x20800020, // ..#... ..#... ...... ...... ..#... ..
-    0x00000000,
 };
-
-
-char *gCauseDesc[18] = {
-    "Interrupt",
-    "TLB modification",
-    "TLB exception on load",
-    "TLB exception on store",
-    "Address error on load",
-    "Address error on store",
-    "Bus error on inst.",
-    "Bus error on data",
-    "System call exception",
-    "Breakpoint exception",
-    "Reserved instruction",
-    "Coprocessor unusable",
-    "Arithmetic overflow",
-    "Trap exception",
-    "Virtual coherency on inst.",
-    "Floating point exception",
-    "Watchpoint exception",
-    "Virtual coherency on data",
-};
-
-char *gFpcsrDesc[6] = {
-    "Unimplemented operation", "Invalid operation", "Division by zero", "Overflow", "Underflow",
-    "Inexact operation",
-};
-
-
 
 extern u64 osClockRate;
 
@@ -177,39 +173,22 @@ static char *write_to_buf(char *buffer, const char *data, size_t size) {
 
 void crash_screen_print(s32 x, s32 y, const char *fmt, ...) {
     char *ptr;
+    char buf[0x108];
     u32 glyph;
-    s32 size;
-    char buf[0x100];
-
     va_list args;
+
     va_start(args, fmt);
-
-    size = _Printf(write_to_buf, buf, fmt, args);
-
-    if (size > 0) {
+    if (_Printf(write_to_buf, buf, fmt, args) > 0) {
         ptr = buf;
-
-#ifdef VERSION_SH
-        while (size > 0) {
-#else
         while (*ptr) {
-#endif
-
             glyph = gCrashScreenCharToGlyph[*ptr & 0x7f];
-
             if (glyph != 0xff) {
                 crash_screen_draw_glyph(x, y, glyph);
             }
-
-#ifdef VERSION_SH
-            size--;
-#endif
-
             ptr++;
             x += 6;
         }
     }
-
     va_end(args);
 }
 
@@ -262,16 +241,10 @@ void draw_crash_screen(OSThread *thread) {
         cause = 17;
     }
 
-#ifdef VERSION_SH
-    osWritebackDCacheAll();
-#endif
-
     crash_screen_draw_rect(25, 20, 270, 25);
     crash_screen_print(30, 25, "THREAD:%d  (%s)", thread->id, gCauseDesc[cause]);
     crash_screen_print(30, 35, "PC:%08XH   SR:%08XH   VA:%08XH", tc->pc, tc->sr, tc->badvaddr);
-#ifdef VERSION_EU
     osWritebackDCacheAll();
-#endif
     crash_screen_sleep(2000);
     crash_screen_draw_rect(25, 45, 270, 185);
     crash_screen_print(30, 50, "AT:%08XH   V0:%08XH   V1:%08XH", (u32) tc->at, (u32) tc->v0,
@@ -294,9 +267,7 @@ void draw_crash_screen(OSThread *thread) {
                        (u32) tc->sp);
     crash_screen_print(30, 140, "S8:%08XH   RA:%08XH", (u32) tc->s8, (u32) tc->ra);
     crash_screen_print_fpcsr(tc->fpcsr);
-#ifdef VERSION_EU
     osWritebackDCacheAll();
-#endif
     crash_screen_print_float_reg(30, 170, 0, &tc->fp0.f.f_even);
     crash_screen_print_float_reg(120, 170, 2, &tc->fp2.f.f_even);
     crash_screen_print_float_reg(210, 170, 4, &tc->fp4.f.f_even);
@@ -313,9 +284,7 @@ void draw_crash_screen(OSThread *thread) {
     crash_screen_print_float_reg(120, 210, 26, &tc->fp26.f.f_even);
     crash_screen_print_float_reg(210, 210, 28, &tc->fp28.f.f_even);
     crash_screen_print_float_reg(30, 220, 30, &tc->fp30.f.f_even);
-#ifdef VERSION_EU
     osWritebackDCacheAll();
-#endif
     osViBlack(FALSE);
     osViSwapBuffer(gCrashScreen.framebuffer);
 }
@@ -350,36 +319,18 @@ void thread2_crash_screen(UNUSED void *arg) {
 }
 
 void crash_screen_set_framebuffer(u16 *framebuffer, s16 width, s16 height) {
-#ifdef VERSION_EU
     gCrashScreen.framebuffer = framebuffer;
-#else
-    gCrashScreen.framebuffer = (u16 *)((uintptr_t)framebuffer | 0xa0000000);
-#endif
     gCrashScreen.width = width;
     gCrashScreen.height = height;
 }
 
 void crash_screen_init(void) {
-#ifdef VERSION_EU
     gCrashScreen.framebuffer = (u16 *) (osMemSize | 0x80000000) - SCREEN_WIDTH * SCREEN_HEIGHT;
-#else
-    gCrashScreen.framebuffer = (u16 *) (osMemSize | 0xA0000000) - SCREEN_WIDTH * SCREEN_HEIGHT;
-#endif
     gCrashScreen.width = SCREEN_WIDTH;
-#ifdef VERSION_EU
     gCrashScreen.height = SCREEN_HEIGHT;
-#else
-    gCrashScreen.height = 0x10;
-#endif
     osCreateMesgQueue(&gCrashScreen.mesgQueue, &gCrashScreen.mesg, 1);
     osCreateThread(&gCrashScreen.thread, 2, thread2_crash_screen, NULL,
-                   (u8 *) gCrashScreen.stack + sizeof(gCrashScreen.stack),
-#ifdef VERSION_EU
-                   OS_PRIORITY_APPMAX
-#else
-                   OS_PRIORITY_RMON
-#endif
-                  );
+                   (u8 *) gCrashScreen.stack + sizeof(gCrashScreen.stack), OS_PRIORITY_APPMAX);
     osStartThread(&gCrashScreen.thread);
 }
 

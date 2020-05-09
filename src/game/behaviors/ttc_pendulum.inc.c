@@ -36,7 +36,7 @@ void bhv_ttc_pendulum_update(void) {
         // Play sound
         if (o->oTTCPendulumSoundTimer != 0) {
             if (--o->oTTCPendulumSoundTimer == 0) {
-                cur_obj_play_sound_2(SOUND_GENERAL_PENDULUM_SWING);
+                PlaySound2(SOUND_GENERAL_PENDULUM_SWING);
             }
         }
 
@@ -60,14 +60,14 @@ void bhv_ttc_pendulum_update(void) {
                     // Select a new acceleration
                     //! By manipulating this, we can cause the pendulum to reach
                     //  extreme angles and speeds
-                    if (random_u16() % 3 != 0) {
+                    if (RandomU16() % 3 != 0) {
                         o->oTTCPendulumAngleAccel = 13.0f;
                     } else {
                         o->oTTCPendulumAngleAccel = 42.0f;
                     }
 
                     // Pick a random delay
-                    if (random_u16() % 2 == 0) {
+                    if (RandomU16() % 2 == 0) {
                         o->oTTCPendulumDelay = random_linear_offset(5, 30);
                     }
                 }

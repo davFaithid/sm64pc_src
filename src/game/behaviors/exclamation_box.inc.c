@@ -30,12 +30,12 @@ struct Struct802C0DF0 sExclamationBoxContents[] = { { 0, 0, 0, MODEL_MARIOS_WING
                                                     { 14, 0, 5, MODEL_STAR, bhvSpawnedStar },
                                                     { 99, 0, 0, 0, NULL } };
 
-void bhv_rotating_exclamation_box_loop(void) {
+void bhv_rotatin_exclamation_box_loop(void) {
     if (o->parentObj->oAction != 1)
-        obj_mark_for_deletion(o);
+        mark_object_for_deletion(o);
 }
 
-void exclamation_box_act_0(void) {
+void ActionExclamationBox0(void) {
     if (o->oBehParams2ndByte < 3) {
         o->oAnimState = o->oBehParams2ndByte;
         if ((save_file_get_flags() & D_8032F0C0[o->oBehParams2ndByte])
@@ -49,45 +49,42 @@ void exclamation_box_act_0(void) {
     }
 }
 
-void exclamation_box_act_1(void) {
-    cur_obj_become_intangible();
+void ActionExclamationBox1(void) {
+    obj_become_intangible();
     if (o->oTimer == 0) {
         spawn_object(o, MODEL_EXCLAMATION_POINT, bhvRotatingExclamationMark);
-        cur_obj_set_model(MODEL_EXCLAMATION_BOX_OUTLINE);
+        obj_set_model(MODEL_EXCLAMATION_BOX_OUTLINE);
     }
     if ((save_file_get_flags() & D_8032F0C0[o->oBehParams2ndByte])
         || ((o->oBehParams >> 24) & 0xFF) != 0) {
         o->oAction = 2;
-        cur_obj_set_model(MODEL_EXCLAMATION_BOX);
+        obj_set_model(MODEL_EXCLAMATION_BOX);
     }
 }
 
-void exclamation_box_act_2(void) {
-    obj_set_hitbox(o, &sExclamationBoxHitbox);
+void ActionExclamationBox2(void) {
+    set_object_hitbox(o, &sExclamationBoxHitbox);
     if (o->oTimer == 0) {
-        cur_obj_unhide();
-        cur_obj_become_tangible();
+        obj_unhide();
+        obj_become_tangible();
         o->oInteractStatus = 0;
         o->oPosY = o->oHomeY;
         o->oGraphYOffset = 0.0f;
     }
-    if (cur_obj_was_attacked_or_ground_pounded()) {
-        cur_obj_become_intangible();
+    if (obj_was_attacked_or_ground_pounded()) {
+        obj_become_intangible();
         o->oExclamationBoxUnkFC = 0x4000;
         o->oVelY = 30.0f;
         o->oGravity = -8.0f;
         o->oFloorHeight = o->oPosY;
         o->oAction = 3;
-#ifdef VERSION_SH
-        queue_rumble_data(5, 80);
-#endif
     }
     load_object_collision_model();
 }
 
-void exclamation_box_act_3(void) {
+void ActionExclamationBox3(void) {
     UNUSED s32 unused;
-    cur_obj_move_using_fvel_and_gravity();
+    obj_move_using_fvel_and_gravity();
     if (o->oVelY < 0.0f) {
         o->oVelY = 0.0f;
         o->oGravity = 0.0f;
@@ -103,7 +100,7 @@ void exclamation_box_act_3(void) {
         o->oAction = 4;
 }
 
-void exclamation_box_spawn_contents(struct Struct802C0DF0 *a0, u8 a1) {
+void func_802C0DF0(struct Struct802C0DF0 *a0, u8 a1) {
     struct Object *sp1C = NULL;
 
     while (a0->unk0 != 99) {
@@ -121,28 +118,28 @@ void exclamation_box_spawn_contents(struct Struct802C0DF0 *a0, u8 a1) {
     }
 }
 
-void exclamation_box_act_4(void) {
-    exclamation_box_spawn_contents(sExclamationBoxContents, o->oBehParams2ndByte);
-    spawn_mist_particles_variable(0, 0, 46.0f);
+void ActionExclamationBox4(void) {
+    func_802C0DF0(sExclamationBoxContents, o->oBehParams2ndByte);
+    func_802AA618(0, 0, 46.0f);
     spawn_triangle_break_particles(20, 139, 0.3f, o->oAnimState);
     create_sound_spawner(SOUND_GENERAL_BREAK_BOX);
     if (o->oBehParams2ndByte < 3) {
         o->oAction = 5;
-        cur_obj_hide();
+        obj_hide();
     } else
-        obj_mark_for_deletion(o);
+        mark_object_for_deletion(o);
 }
 
-void exclamation_box_act_5(void) {
+void ActionExclamationBox5(void) {
     if (o->oTimer > 300)
         o->oAction = 2;
 }
 
-void (*sExclamationBoxActions[])(void) = { exclamation_box_act_0, exclamation_box_act_1,
-                                           exclamation_box_act_2, exclamation_box_act_3,
-                                           exclamation_box_act_4, exclamation_box_act_5 };
+void (*sExclamationBoxActions[])(void) = { ActionExclamationBox0, ActionExclamationBox1,
+                                           ActionExclamationBox2, ActionExclamationBox3,
+                                           ActionExclamationBox4, ActionExclamationBox5 };
 
 void bhv_exclamation_box_loop(void) {
-    cur_obj_scale(2.0f);
-    cur_obj_call_action_function(sExclamationBoxActions);
+    obj_scale(2.0f);
+    obj_call_action_function(sExclamationBoxActions);
 }

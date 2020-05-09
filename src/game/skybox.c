@@ -1,6 +1,7 @@
 #include <ultra64.h>
 
 #include "sm64.h"
+#include "gfx_dimensions.h"
 #include "engine/math_util.h"
 #include "memory.h"
 #include "area.h"
@@ -227,7 +228,12 @@ void draw_skybox_tile_grid(Gfx **dlist, s8 background, s8 player, s8 colorIndex)
                 (*(SkyboxTexture *) segmented_to_virtual(sSkyboxTextures[background]))[tileIndex];
             Vtx *vertices = make_skybox_rect(tileIndex, colorIndex);
 
-            gLoadBlockTexture((*dlist)++, 32, 32, G_IM_FMT_RGBA, texture);
+            gDPSetTextureImage((*dlist)++, G_IM_FMT_RGBA, G_IM_SIZ_16b, 1, texture);
+            gDPTileSync((*dlist)++);
+            gDPSetTile((*dlist)++, G_IM_FMT_RGBA, G_IM_SIZ_16b, 0, 0, G_TX_LOADTILE, 0,
+                G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD, G_TX_WRAP | G_TX_NOMIRROR, G_TX_NOMASK, G_TX_NOLOD);
+            gDPLoadSync((*dlist)++);
+            gDPLoadBlock((*dlist)++, G_TX_LOADTILE, 0, 0, 32 * 32 - 1, CALC_DXT(32, G_IM_SIZ_16b_BYTES));
             gSPVertex((*dlist)++, VIRTUAL_TO_PHYSICAL(vertices), 4, 0);
             gSPDisplayList((*dlist)++, dl_draw_quad_verts_0123);
         }
@@ -241,6 +247,16 @@ void *create_skybox_ortho_matrix(s8 player) {
     f32 top = sSkyBoxInfo[player].scaledY;
     Mtx *mtx = alloc_display_list(sizeof(*mtx));
 
+#ifndef TARGET_N64
+    f32 half_width = (4.0f / 3.0f) / GFX_DIMENSIONS_ASPECT_RATIO * SCREEN_WIDTH / 2;
+    f32 center = (sSkyBoxInfo[player].scaledX + SCREEN_WIDTH / 2);
+    if (half_width < SCREEN_WIDTH / 2) {
+        // A wider screen than 4:3
+        left = center - half_width;
+        right = center + half_width;
+    }
+#endif
+
     if (mtx != NULL) {
         guOrtho(mtx, left, right, bottom, top, 0.0f, 3.0f, 1.0f);
     } else {
@@ -253,7 +269,7 @@ void *create_skybox_ortho_matrix(s8 player) {
  * Creates the skybox's display list, then draws the 3x3 grid of tiles.
  */
 Gfx *init_skybox_display_list(s8 player, s8 background, s8 colorIndex) {
-    s32 dlCommandCount = 5 + 9 * 7; // 5 for the start and end, plus 9 skybox tiles
+    s32 dlCommandCount = 5 + (3 * 3) * 7; // 5 for the start and end, plus 9 skybox tiles
     void *skybox = alloc_display_list(dlCommandCount * sizeof(Gfx));
     Gfx *dlist = skybox;
 

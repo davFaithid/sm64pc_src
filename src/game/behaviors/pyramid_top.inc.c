@@ -53,10 +53,10 @@ void bhv_pyramid_top_spinning(void) {
     // with a random velocity and angle.
     if (o->oTimer < 90) {
         pyramidFragment = spawn_object(o, MODEL_DIRT_ANIMATION, bhvPyramidTopFragment);
-        pyramidFragment->oForwardVel = random_float() * 10.0f + 20.0f;
-        pyramidFragment->oMoveAngleYaw = random_u16();
+        pyramidFragment->oForwardVel = RandomFloat() * 10.0f + 20.0f;
+        pyramidFragment->oMoveAngleYaw = RandomU16();
         pyramidFragment->oPyramidTopFragmentsScale = 0.8f;
-        pyramidFragment->oGravity = random_float() + 2.0f;
+        pyramidFragment->oGravity = RandomFloat() + 2.0f;
     }
 
     // After enough time, transition to the exploding state.
@@ -72,18 +72,18 @@ void bhv_pyramid_top_explode(void) {
     struct Object *pyramidFragment;
     s16 i;
 
-    spawn_mist_particles_variable(0, 0, 690);
+    func_802AA618(0, 0, 690);
 
     // Generate 30 pyramid fragments with random properties.
     for (i = 0; i < 30; i++) {
         pyramidFragment = spawn_object(
             o, MODEL_DIRT_ANIMATION, bhvPyramidTopFragment
         );
-        pyramidFragment->oForwardVel = random_float() * 50 + 80;
-        pyramidFragment->oVelY = random_float() * 80 + 20;
-        pyramidFragment->oMoveAngleYaw = random_u16();
+        pyramidFragment->oForwardVel = RandomFloat() * 50 + 80;
+        pyramidFragment->oVelY = RandomFloat() * 80 + 20;
+        pyramidFragment->oMoveAngleYaw = RandomU16();
         pyramidFragment->oPyramidTopFragmentsScale = 3;
-        pyramidFragment->oGravity = random_float() * 2 + 5;
+        pyramidFragment->oGravity = RandomFloat() * 2 + 5;
     }
 
     // Deactivate the pyramid top.
@@ -101,7 +101,7 @@ void bhv_pyramid_top_loop(void) {
 
         case PYRAMID_TOP_ACT_SPINNING:
             if (o->oTimer == 0) {
-                cur_obj_play_sound_2(SOUND_GENERAL2_PYRAMID_TOP_SPIN);
+                PlaySound2(SOUND_GENERAL2_PYRAMID_TOP_SPIN);
             }
 
             bhv_pyramid_top_spinning();
@@ -124,7 +124,7 @@ void bhv_pyramid_top_fragment_init(void) {
     o->oFriction = 0.999f;
     o->oBuoyancy = 2.0f;
     o->oAnimState = 3;
-    cur_obj_scale(o->oPyramidTopFragmentsScale);
+    obj_scale(o->oPyramidTopFragmentsScale);
 }
 
 /**
@@ -146,8 +146,8 @@ void bhv_pyramid_top_fragment_loop(void) {
  * top's total count of touched detectors, and deactivate the detector.
  */
 void bhv_pyramid_pillar_touch_detector_loop(void) {
-    cur_obj_become_tangible();
-    if (obj_check_if_collided_with_object(o, gMarioObject) == 1) {
+    obj_become_tangible();
+    if (are_objects_collided(o, gMarioObject) == 1) {
         // Increase the pyramid top's count of pillars touched.
         o->parentObj->oPyramidTopPillarsTouched++;
         o->activeFlags = 0;
