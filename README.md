@@ -1,4 +1,8 @@
-# Super Mario 64
+# Super Mario 64 PC Port Source Code
+
+Note: I am not the original creator of this port, I am simply making the source code available to show that this port is not only availabe as an illegal precompiled executable with Nintendo copyrighted assets.
+
+You can get build instructions in the decomp's discord. (I lost the link to them =P)
 
 This repo contains a full decompilation of Super Mario 64 (J), (U), and (E).
 The source and data have been decompiled but complete naming and documentation
